@@ -7,8 +7,9 @@ export class VideoEntity extends BaseEntity {
   // @PrimaryGeneratedColumn()
   // id: number;
 
-  constructor() {
+  constructor(video?: VideoEntity) {
     super();
+    Object.assign(this, video)
   }
 
   @Column()

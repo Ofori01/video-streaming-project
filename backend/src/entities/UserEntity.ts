@@ -12,9 +12,9 @@ import { BaseEntity } from "../lib/Generics/BaseEntity";
 export class UserEntity extends BaseEntity {
   // @PrimaryGeneratedColumn()
   // id: number;
-  constructor(){
+  constructor(user?: UserEntity){
     super()
-    Object.assign(this, UserEntity.prototype)
+    Object.assign(this, user)
   }
 
   @Column({
@@ -31,7 +31,11 @@ export class UserEntity extends BaseEntity {
   @Column()
   password: string;
 
-  @Column()
+  @Column({
+    type: "enum",
+    enum: USER_ROLE,
+    default: USER_ROLE.user
+  })
   role: USER_ROLE;
 
   @Column()

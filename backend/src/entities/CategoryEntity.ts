@@ -5,9 +5,9 @@ import { BaseEntity } from "../lib/Generics/BaseEntity";
 
 @Entity()
 export class CategoryEntity extends BaseEntity {
-    constructor(){
+    constructor(category?: CategoryEntity){
         super()
-        Object.assign(this,CategoryEntity)
+        Object.assign(this,category)
     }
     // @PrimaryGeneratedColumn()
     // id: number
