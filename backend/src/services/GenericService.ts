@@ -1,6 +1,6 @@
 import { IGenericRepository } from "../interfaces/repositories/IGenericRepository";
 import { IGenericService } from "../interfaces/services/IGenericService";
-import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { BaseEntity } from "../entities/BaseEntity";
 
 export abstract class GenericService<T extends BaseEntity>
   implements IGenericService<T>

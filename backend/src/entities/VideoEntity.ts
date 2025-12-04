@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { UPLOAD_STATUS, VIDEO_STATUS } from "../lib/types/common/enums";
-import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { BaseEntity } from "./BaseEntity";
 import { FileEntity } from "./FilesEntity";
 import { CategoryEntity } from "./CategoryEntity";
 import { UserEntity } from "./UserEntity";
@@ -26,7 +26,7 @@ export class VideoEntity extends BaseEntity {
   @ManyToOne(() => CategoryEntity, (category) => category.videos)
   category: CategoryEntity;
 
-  @ManyToOne(()=> UserEntity, (user)=> user.uploads)
+  @ManyToOne(() => UserEntity, (user) => user.uploads)
   uploadedBy: UserEntity;
 
   @Column({

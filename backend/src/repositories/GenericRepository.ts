@@ -1,7 +1,7 @@
 import { Options } from "pg-connection-string";
 import { EntityTarget, FindOptionsWhere, Repository } from "typeorm";
 import { IGenericRepository } from "../interfaces/repositories/IGenericRepository";
-import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { BaseEntity } from "../entities/BaseEntity";
 import { AppDataSource } from "../config/db.config";
 
 export abstract class GenericRepository<T extends BaseEntity>

@@ -6,17 +6,16 @@ import {
   OneToMany,
   OneToOne,
 } from "typeorm";
-import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { BaseEntity } from "./BaseEntity";
 import { VideoEntity } from "./VideoEntity";
 import { UserRolesEntity } from "./UserRolesEntity";
 import { FileEntity } from "./FilesEntity";
 
 @Entity()
 export class UserEntity extends BaseEntity {
-
   @Column({
     length: 10,
-    unique: true
+    unique: true,
   })
   username: string;
 
@@ -28,16 +27,14 @@ export class UserEntity extends BaseEntity {
 
   @Column()
   password: string;
- 
-  @ManyToOne(()=> UserRolesEntity, (role)=>role.users)
+
+  @ManyToOne(() => UserRolesEntity, (role) => role.users)
   role: UserRolesEntity;
 
-
-  @OneToOne(()=> FileEntity)
+  @OneToOne(() => FileEntity)
   @JoinColumn()
   profile_picture_url: FileEntity;
 
-  
-  @OneToMany(()=> VideoEntity, (video)=> video.uploadedBy)
-  uploads: VideoEntity[]
+  @OneToMany(() => VideoEntity, (video) => video.uploadedBy)
+  uploads: VideoEntity[];
 }
