@@ -1,38 +1,33 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { VIDEO_STATUS } from "../lib/types/common/enums";
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { UPLOAD_STATUS, VIDEO_STATUS } from "../lib/types/common/enums";
 import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { FileEntity } from "./FilesEntity";
+import { CategoryEntity } from "./CategoryEntity";
+import { UserEntity } from "./UserEntity";
 
 @Entity()
 export class VideoEntity extends BaseEntity {
-  // @PrimaryGeneratedColumn()
-  // id: number;
-
-  constructor(video?: VideoEntity) {
-    super();
-    Object.assign(this, video)
-  }
-
   @Column()
   title: string;
 
   @Column()
   description: string;
 
-  @Column()
-  video_url: string;
+  //? not quite sure
+  @OneToMany(() => FileEntity, (file) => file.video)
+  files: FileEntity[];
 
-  @Column()
-  thumbnail_url: string;
+  @ManyToOne(() => CategoryEntity, (category) => category.videos)
+  category: CategoryEntity;
 
-  @Column()
-  category: string;
-
-  //foreign key
-  @Column()
-  uploaded_by: string;
-
-  @Column()
-  views: number;
+  @ManyToOne(()=> UserEntity, (user)=> user.uploads)
+  uploadedBy: UserEntity;
 
   @Column({
     type: "float",
@@ -40,5 +35,14 @@ export class VideoEntity extends BaseEntity {
   duration: number;
 
   @Column()
+  processingError: string;
+
+  @Column()
   status: VIDEO_STATUS;
+
+  @Column({
+    enum: UPLOAD_STATUS,
+    default: UPLOAD_STATUS.pending,
+  })
+  processingStatus: UPLOAD_STATUS;
 }

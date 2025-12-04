@@ -10,4 +10,5 @@ export class UserRepository
     const Entity = UserEntity;
     super(Entity);
   }
+  //
 }

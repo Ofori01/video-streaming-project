@@ -1,24 +1,22 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
 } from "typeorm";
-import { USER_ROLE } from "../lib/types/common/enums";
 import { BaseEntity } from "../lib/Generics/BaseEntity";
+import { VideoEntity } from "./VideoEntity";
+import { UserRolesEntity } from "./UserRolesEntity";
+import { FileEntity } from "./FilesEntity";
 
 @Entity()
 export class UserEntity extends BaseEntity {
-  // @PrimaryGeneratedColumn()
-  // id: number;
-  constructor(user?: UserEntity){
-    super()
-    Object.assign(this, user)
-  }
 
   @Column({
     length: 10,
+    unique: true
   })
   username: string;
 
@@ -30,20 +28,16 @@ export class UserEntity extends BaseEntity {
 
   @Column()
   password: string;
+ 
+  @ManyToOne(()=> UserRolesEntity, (role)=>role.users)
+  role: UserRolesEntity;
 
-  @Column({
-    type: "enum",
-    enum: USER_ROLE,
-    default: USER_ROLE.user
-  })
-  role: USER_ROLE;
 
-  @Column()
-  profile_picture_url: string;
+  @OneToOne(()=> FileEntity)
+  @JoinColumn()
+  profile_picture_url: FileEntity;
 
-  // @CreateDateColumn()
-  // createdAt: Date;
-
-  // @UpdateDateColumn()
-  // updatedAt: Date;
+  
+  @OneToMany(()=> VideoEntity, (video)=> video.uploadedBy)
+  uploads: VideoEntity[]
 }

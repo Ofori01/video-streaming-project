@@ -3,15 +3,12 @@ import { UserRepository } from "../repositories/UserRepository";
 import { UserService } from "../services/UserService";
 import { UserController } from "../controllers/user/UserController";
 
+const userRoutes = Router();
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
 
-const userRoutes = Router()
-const userRepository = new UserRepository()
-const userService = new UserService(userRepository)
+const userController = new UserController(userService);
 
-const userController = new UserController(userService)
+userRoutes.post("/create", userController.createUser);
 
-userRoutes.post("/create", userController.createUser.bind(userController))
-
-
-
-export default userRoutes
+export default userRoutes;

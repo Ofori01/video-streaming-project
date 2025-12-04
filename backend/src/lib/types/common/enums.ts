@@ -8,3 +8,16 @@ export enum VIDEO_STATUS {
     "archived",
     "deleted"
 }
+
+export enum UPLOAD_STATUS {
+    "pending",
+    "processing",
+    "completed",
+    "failed"
+}
+
+export enum FILE_TYPE {
+  "thumbnail",
+  "video",
+  "profilePicture"
+}
