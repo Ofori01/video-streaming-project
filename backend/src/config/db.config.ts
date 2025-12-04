@@ -8,7 +8,7 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "password123",
   database: "test",
-  synchronize: true,
+  synchronize: false,
   logging: true,
   entities: [path.join(__dirname, "../entities/**/*.{ts,js}")],
   subscribers: [],
@@ -21,5 +21,6 @@ export const initializeDb = async () => {
     console.log("Data Source has been initialized!");
   } catch (error) {
     console.error("Error during Data Source initialization", error);
+    process.exit(1)
   }
 };

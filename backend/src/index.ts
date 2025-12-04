@@ -9,9 +9,14 @@ const PORT = 5000;
 
 app.use(express.json());
 
-app.use("/api", routes)
 
-app.listen(PORT, async () => {
-  console.log(`server started on port ${PORT}`);
-  await initializeDb();
-});
+
+
+//initialize db before server connection
+initializeDb().then(()=>{
+  app.use("/api", routes)
+  app.listen(PORT, async () => {
+    console.log(`server started on port ${PORT}`);
+  });
+
+})

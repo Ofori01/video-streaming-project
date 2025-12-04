@@ -9,6 +9,6 @@ const userService = new UserService(userRepository);
 
 const userController = new UserController(userService);
 
-userRoutes.post("/create", userController.createUser);
+userRoutes.post("/create", userController.createUser.bind(userController));
 
 export default userRoutes;
