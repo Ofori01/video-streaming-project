@@ -18,10 +18,9 @@ export class UserController {
     next: NextFunction
   ) => {
     try {
-      const newUser = await this._userService
-        .Create
-        // new UserEntity(req.body as UserEntity)
-        ();
+      const user = new UserEntity();
+      Object.assign(user, req.body);
+      const newUser = await this._userService.Create(user);
       res.status(201).send({
         message: "User created successfully",
         data: newUser,

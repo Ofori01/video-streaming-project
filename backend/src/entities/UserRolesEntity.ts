@@ -13,7 +13,7 @@ export class UserRolesEntity extends BaseEntity {
   name: USER_ROLE;
 
   @Column({
-    type: "text",
+    type: "varchar",
     length: "30",
   })
   description: string;
