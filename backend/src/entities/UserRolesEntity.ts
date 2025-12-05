@@ -18,6 +18,6 @@ export class UserRolesEntity extends BaseEntity {
   })
   description: string;
 
-  @OneToMany(() => UserEntity, (user) => user.role, {nullable: true})
-  users: UserEntity[];
+  @OneToMany(() => UserEntity, (user) => user.role)
+  users?: UserEntity[];
 }
