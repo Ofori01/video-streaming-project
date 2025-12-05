@@ -9,7 +9,7 @@ export const AppDataSource = new DataSource({
   password: "password123",
   database: "test",
   synchronize: true,
-  logging: true,
+  logging: false,
   entities: [path.join(__dirname, "../entities/**/*.{ts,js}")],
   subscribers: [],
   migrations: [],
