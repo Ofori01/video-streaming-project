@@ -42,7 +42,7 @@ export class VideoEntity extends BaseEntity {
 
   @Column({
     enum: UPLOAD_STATUS,
-    default: UPLOAD_STATUS.pending,
+    default: UPLOAD_STATUS.PENDING,
   })
   processingStatus: UPLOAD_STATUS;
 }

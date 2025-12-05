@@ -7,7 +7,7 @@ import { AppDataSource } from "../config/db.config";
 export abstract class GenericRepository<T extends BaseEntity>
   implements IGenericRepository<T>
 {
-  protected repository: Repository<T>;
+  protected repository: Repository<T>; 
 
   constructor(private Entity: EntityTarget<T>) {
     this.repository = AppDataSource.getRepository(this.Entity);

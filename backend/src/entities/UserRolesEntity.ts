@@ -8,7 +8,7 @@ export class UserRolesEntity extends BaseEntity {
   @Column({
     type: "enum",
     enum: USER_ROLE,
-    default: USER_ROLE.user,
+    default: USER_ROLE.USER,
   })
   name: USER_ROLE;
 
@@ -18,6 +18,6 @@ export class UserRolesEntity extends BaseEntity {
   })
   description: string;
 
-  @OneToMany(() => UserEntity, (user) => user.role)
+  @OneToMany(() => UserEntity, (user) => user.role, {nullable: true})
   users: UserEntity[];
 }

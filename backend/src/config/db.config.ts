@@ -8,7 +8,7 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "password123",
   database: "test",
-  synchronize: false,
+  synchronize: true,
   logging: true,
   entities: [path.join(__dirname, "../entities/**/*.{ts,js}")],
   subscribers: [],

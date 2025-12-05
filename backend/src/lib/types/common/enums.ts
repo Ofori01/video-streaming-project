@@ -1,23 +1,23 @@
 export enum USER_ROLE {
-  "admin",
-  "user",
+  ADMIN = "admin",
+  USER = "user",
 }
 
 export enum VIDEO_STATUS {
-    "active",
-    "archived",
-    "deleted"
+  ACTIVE = "active",
+  ARCHIVED = "archived",
+  DELETED = "deleted",
 }
 
 export enum UPLOAD_STATUS {
-    "pending",
-    "processing",
-    "completed",
-    "failed"
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
 }
 
 export enum FILE_TYPE {
   "thumbnail",
   "video",
-  "profilePicture"
+  "profilePicture",
 }

@@ -10,5 +10,6 @@ const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
 userRoutes.post("/create", userController.createUser.bind(userController));
+userRoutes.post("/init", userController.initDb)
 
 export default userRoutes;

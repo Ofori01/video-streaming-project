@@ -31,7 +31,7 @@ export class UserEntity extends BaseEntity {
   @ManyToOne(() => UserRolesEntity, (role) => role.users)
   role: UserRolesEntity;
 
-  @OneToOne(() => FileEntity)
+  @OneToOne(() => FileEntity, {nullable: true})
   @JoinColumn()
   profile_picture_url: FileEntity;
 
