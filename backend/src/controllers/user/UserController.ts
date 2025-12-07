@@ -219,25 +219,33 @@ export class UserController {
   //   }
   // };
 
-
-  GetUsers = async (req: Request<{},{}, {}, getUsersQueryDto>, res: Response, next: NextFunction)=>{
+  GetUsers = async (
+    req: Request<{}, {}, {}, getUsersQueryDto>,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      if (req.query.role){
-        const users  = await  this._userService.GetRoleUsers(req.query.role)
-        return responseHandler.success(res,users,"Users retrieved successfully")
+      if (req.query.role) {
+        const users = await this._userService.GetRoleUsers(req.query.role);
+        return responseHandler.success(
+          res,
+          users,
+          "Users retrieved successfully"
+        );
       }
-      const users = await this._userService.GetAll({relations: {
-        role: true
-      }})
-      return responseHandler.success(res,users, "Users retrieved successfully")
+      const users = await this._userService.GetAll({
+        relations: {
+          role: true,
+        },
+      });
+      return responseHandler.success(
+        res,
+        users,
+        "Users retrieved successfully"
+      );
     } catch (error) {
-      console.error(error)
-      return res.status(500).send({
-        message: 'something went wrong'
-      })
+      console.error(error);
+      return next(error);
     }
-  }
-
-
-  
+  };
 }

@@ -39,7 +39,7 @@ export const errorHandler = (
     message = err.message || message;
   }
 
-  res.status(statusCode).send({
+  return res.status(statusCode).send({
     success: false,
     message,
     errors,
