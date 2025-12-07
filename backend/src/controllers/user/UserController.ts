@@ -11,6 +11,7 @@ import { UserRolesEntity } from "../../entities/UserRolesEntity";
 import { AppDataSource } from "../../config/db.config";
 import { USER_ROLE } from "../../lib/types/common/enums";
 import { CategoryEntity } from "../../entities/CategoryEntity";
+import responseHandler from "../../middlewares/responseHandler/responseHandler";
 
 export class UserController {
   constructor(private _userService: UserService) {}
@@ -223,18 +224,12 @@ export class UserController {
     try {
       if (req.query.role){
         const users  = await  this._userService.GetRoleUsers(req.query.role)
-        return res.send({
-          message: "users retrieved successfully",
-          data: users
-        })
+        return responseHandler.success(res,users,"Users retrieved successfully")
       }
       const users = await this._userService.GetAll({relations: {
         role: true
       }})
-      return res.send({
-        message: "users retrieved successfully",
-        data: users
-      })
+      return responseHandler.success(res,users, "Users retrieved successfully")
     } catch (error) {
       console.error(error)
       return res.status(500).send({
