@@ -9,6 +9,8 @@ export interface createUserDto {
     //would be removed
     role: USER_ROLE
 
+}
 
-
+export interface getUsersQueryDto{
+    role?: USER_ROLE
 }

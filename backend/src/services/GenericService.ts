@@ -1,6 +1,7 @@
 import { IGenericRepository } from "../interfaces/repositories/IGenericRepository";
 import { IGenericService } from "../interfaces/services/IGenericService";
 import { BaseEntity } from "../entities/BaseEntity";
+import { FindManyOptions } from "typeorm";
 
 export abstract class GenericService<T extends BaseEntity>
   implements IGenericService<T>
@@ -10,8 +11,8 @@ export abstract class GenericService<T extends BaseEntity>
   async Create(entity: T): Promise<T> {
     return await this._repository.Create(entity);
   }
-  async GetAll(): Promise<T[]> {
-    return await this._repository.GetAll();
+  async GetAll(options?: FindManyOptions): Promise<T[]> {
+    return await this._repository.GetAll(options);
   }
 
   async GetById(id: number): Promise<T> {
