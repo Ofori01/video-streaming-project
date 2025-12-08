@@ -5,6 +5,7 @@ import { UnauthorizedError } from "../errorHandler/errors/UnauthorizedError";
 import jwt from "jsonwebtoken";
 import envConfig from "../../config/env.config";
 import { AuthRequest } from "./AuthRequest";
+import { USER_ROLE } from "../../lib/types/common/enums";
 
 class AuthMiddleware {
   private static _instance: AuthMiddleware;
@@ -18,6 +19,27 @@ class AuthMiddleware {
   }
 
   //authorization
+  authorize = (...roles: USER_ROLE[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+      try {
+        const user = req.user;
+
+        if (!user) {
+          throw new UnauthorizedError(
+            "Invalid token or token expired. Login again"
+          );
+        }
+
+        if (!roles.includes(user.role.name)) {
+          throw new UnauthorizedError("Unauthorized to access this resource");
+        }
+
+        next();
+      } catch (error) {
+        return next(error);
+      }
+    };
+  };
 
   //authentication
   authentication = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -27,7 +49,7 @@ class AuthMiddleware {
         throw new UnauthorizedError("Invalid token");
       }
       const user = jwt.verify(token, envConfig.JWT_SECRET) as UserEntity;
-      req.user = user
+      req.user = user;
     } catch (error) {
       next(error);
     }

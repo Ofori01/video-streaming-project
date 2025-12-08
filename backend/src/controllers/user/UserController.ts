@@ -4,7 +4,7 @@ import {
   type Request,
   type Response,
 } from "express";
-import { createUserDto, getUsersQueryDto } from "./user-dtos";
+import { createUserDto, getUsersQueryDto } from "../../interfaces/dtos/user-dtos";
 import { UserEntity } from "../../entities/UserEntity";
 import { UserRolesEntity } from "../../entities/UserRolesEntity";
 import { AppDataSource } from "../../config/db.config";

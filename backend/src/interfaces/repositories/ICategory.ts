@@ -7,5 +7,5 @@ export interface ICategoryRepository extends IGenericRepository<CategoryEntity>{
 
 
     //additional
-    GetVideos(category: CategoryEntity): Promise<CategoryEntity[]>
+    // GetVideos(category: CategoryEntity): Promise<CategoryEntity[]>
 }

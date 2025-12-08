@@ -31,13 +31,17 @@ export class VideoEntity extends BaseEntity {
 
   @Column({
     type: "float",
+    nullable: true
   })
   duration: number;
 
-  @Column()
+  @Column({nullable: true})
   processingError: string;
 
-  @Column()
+  @Column({
+    enum: VIDEO_STATUS,
+    default: VIDEO_STATUS.ACTIVE
+  })
   status: VIDEO_STATUS;
 
   @Column({

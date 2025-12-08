@@ -1,6 +1,6 @@
 import { AuthService } from "../../services/AuthService";
 import { NextFunction, Request, Response } from "express";
-import { LoginDto } from "./auth-dtos";
+import { LoginDto } from "../../interfaces/dtos/auth-dtos";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 
 export class AuthController {
