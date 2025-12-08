@@ -11,7 +11,7 @@ const PORT = 5000;
 app.use(express.json());
 
 
-
+//TODO - ASK// use a container class for all repos and services so only a shared instance is available
 
 app.use("/api", routes)
 app.use(errorHandler)

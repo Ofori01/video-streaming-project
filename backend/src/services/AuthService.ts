@@ -1,11 +1,12 @@
 import envConfig from "../config/env.config";
+import { UserEntity } from "../entities/UserEntity";
 import { IUserRepository } from "../interfaces/repositories/IUserRepository";
 import CustomError from "../middlewares/errorHandler/errors/CustomError";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-class AuthService {
+export class AuthService {
   constructor(private _userRepository: IUserRepository) {}
 
   private generateToken(data: object) {
@@ -16,7 +17,10 @@ class AuthService {
     const user = await this._userRepository.GetOne({
       where: { email: email },
       relations: { role: true },select: {
-        password: false
+        id: true,
+        email: true,
+        username: true,
+        password: true
       }
     });
 
@@ -27,7 +31,14 @@ class AuthService {
     if (!(await bcrypt.compare(password, user.password))) {
       throw new CustomError("Incorrect password", 400);
     }
-    const token = this.generateToken(user);
+    //TODO - use in auth request type instead of userEntity
+    const payload = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role?.name ??  'user'
+    }
+    const token = this.generateToken(payload);
     return {user, token}
   }
 }

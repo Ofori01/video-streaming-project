@@ -1,6 +1,5 @@
 import { UserService } from "../../services/UserService";
 import {
-  response,
   type NextFunction,
   type Request,
   type Response,
@@ -9,9 +8,8 @@ import { createUserDto, getUsersQueryDto } from "./user-dtos";
 import { UserEntity } from "../../entities/UserEntity";
 import { UserRolesEntity } from "../../entities/UserRolesEntity";
 import { AppDataSource } from "../../config/db.config";
-import { USER_ROLE } from "../../lib/types/common/enums";
-import { CategoryEntity } from "../../entities/CategoryEntity";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
+import bcrypt from 'bcryptjs'
 
 export class UserController {
   constructor(private _userService: UserService) {}
@@ -88,7 +86,7 @@ export class UserController {
       }
       const user = new UserEntity();
       user.email = req.body.email;
-      user.password = req.body.password;
+      user.password = bcrypt.hashSync(req.body.password);
       user.username = req.body.username;
       user.role = role;
 
