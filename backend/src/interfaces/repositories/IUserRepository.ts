@@ -1,3 +1,4 @@
+import { FindOneOptions, FindOptions } from "typeorm";
 import { UserEntity } from "../../entities/UserEntity";
 import { IGenericRepository } from "./IGenericRepository";
 

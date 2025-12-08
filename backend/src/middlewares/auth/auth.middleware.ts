@@ -4,6 +4,7 @@ import { UserEntity } from "../../entities/UserEntity";
 import { UnauthorizedError } from "../errorHandler/errors/UnauthorizedError";
 import jwt from "jsonwebtoken";
 import envConfig from "../../config/env.config";
+import { AuthRequest } from "./AuthRequest";
 
 class AuthMiddleware {
   private static _instance: AuthMiddleware;
@@ -19,13 +20,14 @@ class AuthMiddleware {
   //authorization
 
   //authentication
-  authentication = (req: Request, res: Response, next: NextFunction) => {
+  authentication = (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const token = req.header("Authorization")?.replace("Bearer", "");
       if (!token) {
         throw new UnauthorizedError("Invalid token");
       }
-      const user = jwt.verify(token, envConfig.JWT_SECRET);
+      const user = jwt.verify(token, envConfig.JWT_SECRET) as UserEntity;
+      req.user = user
     } catch (error) {
       next(error);
     }

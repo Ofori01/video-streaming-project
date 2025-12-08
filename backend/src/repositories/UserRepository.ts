@@ -1,4 +1,4 @@
-import { FindManyOptions } from "typeorm";
+import { FindManyOptions, FindOneOptions, FindOptions } from "typeorm";
 import { UserEntity } from "../entities/UserEntity";
 import { IUserRepository } from "../interfaces/repositories/IUserRepository";
 import { GenericRepository } from "./GenericRepository";

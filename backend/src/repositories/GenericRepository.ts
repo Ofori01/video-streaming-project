@@ -1,5 +1,5 @@
 import { Options } from "pg-connection-string";
-import { EntityTarget, FindManyOptions, FindOptions, FindOptionsWhere, Repository } from "typeorm";
+import { EntityTarget, FindManyOptions, FindOneOptions, FindOptions, FindOptionsWhere, Repository } from "typeorm";
 import { IGenericRepository } from "../interfaces/repositories/IGenericRepository";
 import { BaseEntity } from "../entities/BaseEntity";
 import { AppDataSource } from "../config/db.config";
@@ -15,6 +15,10 @@ export abstract class GenericRepository<T extends BaseEntity>
 
   async Create(entity: T): Promise<T> {
     return await this.repository.save(entity);
+  }
+
+  async GetOne(options: FindOneOptions<T>): Promise<T | null> {
+    return await this.repository.findOne(options)
   }
 
   async GetAll(options?: FindManyOptions<T>): Promise<T[]> {
