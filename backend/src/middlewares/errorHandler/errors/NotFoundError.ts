@@ -3,7 +3,7 @@ import CustomError from "./CustomError";
 
 export class NotFoundError extends CustomError {
     constructor(message: string){
-        super(message, 400)
+        super(message, 404)
     }
   name: string = "NotFoundError";
     

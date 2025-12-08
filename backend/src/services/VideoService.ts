@@ -21,7 +21,7 @@ export class VideoService
     super(videoRepository);
   }
 
-  CreateVideo(dto: CreateVideoDto): Promise<VideoEntity | null> {
+  CreateVideo(dto: CreateVideoDto): Promise<VideoEntity> {
     return AppDataSource.transaction(async (transactionManager) => {
       const Category = await transactionManager
         .getRepository(CategoryEntity)
@@ -61,8 +61,8 @@ export class VideoService
 
         await fileRepo.save(files);
       }
-
-      return await videoRepo.findOne({
+      //TODO - use select to remove some fields eg password
+      return await videoRepo.findOneOrFail({
         where: {
           id: video.id,
         },
@@ -70,7 +70,7 @@ export class VideoService
           category: true,
           files: true,
           uploadedBy: true,
-        },
+        }
       });
     });
   }

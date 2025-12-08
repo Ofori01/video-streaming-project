@@ -15,6 +15,6 @@ export class CategoryEntity extends BaseEntity {
   })
   description: string;
 
-  @OneToMany(() => VideoEntity, (video) => video.category, {nullable: true})
+  @OneToMany(() => VideoEntity, (video) => video.category)
   videos: VideoEntity[];
 }

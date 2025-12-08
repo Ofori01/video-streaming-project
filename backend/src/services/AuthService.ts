@@ -25,7 +25,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundError("User does not exist ");
+      throw new NotFoundError("User does not exist");
     }
 
     if (!(await bcrypt.compare(password, user.password))) {
