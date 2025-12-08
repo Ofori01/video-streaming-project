@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import envConfig from "../../config/env.config";
 import { AuthRequest } from "./AuthRequest";
 import { USER_ROLE } from "../../lib/types/common/enums";
+import { TokenContent } from "../../interfaces/common/tokenContent";
 
 class AuthMiddleware {
   private static _instance: AuthMiddleware;
@@ -30,7 +31,7 @@ class AuthMiddleware {
           );
         }
 
-        if (!roles.includes(user.role.name)) {
+        if (!roles.includes(user.role)) {
           throw new UnauthorizedError("Unauthorized to access this resource");
         }
 
@@ -42,14 +43,16 @@ class AuthMiddleware {
   };
 
   //authentication
-  authentication = (req: AuthRequest, res: Response, next: NextFunction) => {
+  authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const token = req.header("Authorization")?.replace("Bearer", "");
+      const token = req.header("Authorization")?.replace("Bearer ","");
       if (!token) {
         throw new UnauthorizedError("Invalid token");
       }
-      const user = jwt.verify(token, envConfig.JWT_SECRET) as UserEntity;
+     
+      const user = jwt.verify(token, envConfig.JWT_SECRET) as TokenContent;
       req.user = user;
+      next()
     } catch (error) {
       next(error);
     }
