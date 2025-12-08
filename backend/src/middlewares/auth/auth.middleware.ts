@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { UserEntity } from "../../entities/UserEntity";
 import { UnauthorizedError } from "../errorHandler/errors/UnauthorizedError";
 import jwt from "jsonwebtoken";
+import envConfig from "../../config/env.config";
 
 class AuthMiddleware {
   private static _instance: AuthMiddleware;
@@ -24,7 +25,7 @@ class AuthMiddleware {
       if (!token) {
         throw new UnauthorizedError("Invalid token");
       }
-      const user = jwt.verify(token);
+      const user = jwt.verify(token, envConfig.JWT_SECRET);
     } catch (error) {
       next(error);
     }
