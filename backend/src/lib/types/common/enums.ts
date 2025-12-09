@@ -17,7 +17,7 @@ export enum UPLOAD_STATUS {
 }
 
 export enum FILE_TYPE {
-  "thumbnail",
-  "video",
-  "profilePicture",
+  THUMBNAIL  = "thumbnail",
+  VIDEO = "video",
+  PROFILE_PICTURE = "profilePicture",
 }

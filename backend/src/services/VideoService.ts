@@ -16,7 +16,7 @@ export class VideoService
 {
   constructor(
     protected videoRepository: IVideoRepository,
-    private _categoryRepository: ICategoryRepository
+    // private _categoryRepository: ICategoryRepository
   ) {
     super(videoRepository);
   }
@@ -74,4 +74,5 @@ export class VideoService
       });
     });
   }
+  
 }
