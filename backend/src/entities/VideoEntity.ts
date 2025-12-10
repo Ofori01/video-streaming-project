@@ -40,7 +40,7 @@ export class VideoEntity extends BaseEntity {
 
   @Column({
     enum: VIDEO_STATUS,
-    default: VIDEO_STATUS.ACTIVE
+    default: VIDEO_STATUS.ARCHIVED
   })
   status: VIDEO_STATUS;
 

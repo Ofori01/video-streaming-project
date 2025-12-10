@@ -3,7 +3,10 @@ import { IVideoService } from "../../interfaces/services/IVideoService";
 import { AuthRequest } from "../../middlewares/auth/AuthRequest";
 import { NextFunction, Response } from "express";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
-import { VIDEO_STATUS } from "../../lib/types/common/enums";
+import { UPLOAD_STATUS, USER_ROLE, VIDEO_STATUS } from "../../lib/types/common/enums";
+import { FindOptionsWhere } from "typeorm";
+import { UserEntity } from "../../entities/UserEntity";
+import { VideoEntity } from "../../entities/VideoEntity";
 
 export class VideoController {
   constructor(private _videoService: IVideoService) {}
@@ -22,31 +25,37 @@ export class VideoController {
     }
   };
 
-  GetAllVideosAdmin = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const videos = await this._videoService.GetAll({
+//   GetAllVideosAdmin = async (
+//     req: AuthRequest,
+//     res: Response,
+//     next: NextFunction
+//   ) => {
+//     try {
+//       const videos = await this._videoService.GetAll({
         
-        relations: {
-          files: true,
-          uploadedBy: true,
-          category:true
-        },
-      });
-      return responseHandler.success(res, videos);
-    } catch (error) {
-      return next(error);
-    }
-  };
+//         relations: {
+//           files: true,
+//           uploadedBy: true,
+//           category:true
+//         },
+//       });
+//       return responseHandler.success(res, videos);
+//     } catch (error) {
+//       return next(error);
+//     }
+//   };
 
-  GetAllVideosUser  =  async (req: AuthRequest<{},{}, {}, GetAllVideosQuery>, res: Response, next: NextFunction) => {
+  GetAllVideos =  async (req: AuthRequest<{},{}, {}, GetAllVideosQuery>, res: Response, next: NextFunction) => {
     try {
+
+        const userFilter : FindOptionsWhere<VideoEntity> = req.user?.role === USER_ROLE.USER ? {
+            status: VIDEO_STATUS.ACTIVE,
+            processingStatus: UPLOAD_STATUS.COMPLETED,
+            
+        } : {}
         const videos = await this._videoService.GetAll({
             where: {
-                status: VIDEO_STATUS.ACTIVE,
+                ...userFilter,
                 category : {
                     id : req.query.categoryId
                 }
