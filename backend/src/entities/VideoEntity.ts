@@ -2,8 +2,7 @@ import {
   Column,
   Entity,
   ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
+  OneToOne,
 } from "typeorm";
 import { UPLOAD_STATUS, VIDEO_STATUS } from "../lib/types/common/enums";
 import { BaseEntity } from "./BaseEntity";
@@ -19,14 +18,17 @@ export class VideoEntity extends BaseEntity {
   @Column()
   description: string;
 
-  //? not quite sure
-  @OneToMany(() => FileEntity, (file) => file.video)
-  files: FileEntity[];
+  @ManyToOne(()=> FileEntity)
+  thumbnail: FileEntity
+
+  @ManyToOne(()=> FileEntity)
+  video: FileEntity
+  
 
   @ManyToOne(() => CategoryEntity, (category) => category.videos)
   category: CategoryEntity;
 
-  @ManyToOne(() => UserEntity, (user) => user.uploads)
+  @ManyToOne(() => UserEntity)
   uploadedBy: UserEntity;
 
   @Column({

@@ -4,9 +4,9 @@ import { FileEntity } from "../entities/FilesEntity";
 import { UserEntity } from "../entities/UserEntity";
 import { VideoEntity } from "../entities/VideoEntity";
 import { CreateVideoDto } from "../interfaces/dtos/video-dtos";
-import { ICategoryRepository } from "../interfaces/repositories/ICategory";
 import { IVideoRepository } from "../interfaces/repositories/IVideoRepository";
 import { IVideoService } from "../interfaces/services/IVideoService";
+import { FILE_TYPE } from "../lib/types/common/enums";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import { GenericService } from "./GenericService";
 
@@ -37,8 +37,18 @@ export class VideoService
         throw new NotFoundError("Uploaded By user not found");
       }
       const videoRepo = transactionManager.getRepository(VideoEntity);
+      const fileRepo = transactionManager.getRepository(FileEntity)
 
-      const video = videoRepo.create({
+      const thumbnail = fileRepo.create({
+        type: FILE_TYPE.THUMBNAIL,
+        url: dto.thumbnail,
+      })
+      const video = fileRepo.create({
+        type: FILE_TYPE.VIDEO,
+        url: dto.video
+      })
+
+      const newVideo = videoRepo.create({
         title: dto.title,
         description: dto.description,
         status: dto.status,
@@ -46,29 +56,18 @@ export class VideoService
         category: Category,
         uploadedBy: uploader,
       });
-      await videoRepo.save(video);
+      await videoRepo.save(newVideo);
 
-      //!for files -> would be a background job later
-      if (dto.files?.length) {
-        const fileRepo = transactionManager.getRepository(FileEntity);
-        const files = dto.files.map((file) =>
-          fileRepo.create({
-            url: file.url,
-            type: file.type,
-            video: video,
-          })
-        );
-
-        await fileRepo.save(files);
-      }
+    
       //TODO - use select to remove some fields eg password
       return await videoRepo.findOneOrFail({
         where: {
           id: video.id,
         },
         relations: {
+          thumbnail: true,
+          video: true,
           category: true,
-          files: true,
           uploadedBy: true,
         }
       });

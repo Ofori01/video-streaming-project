@@ -35,6 +35,5 @@ export class UserEntity extends BaseEntity {
   @JoinColumn()
   profile_picture_url: FileEntity;
 
-  @OneToMany(() => VideoEntity, (video) => video.uploadedBy)
-  uploads: VideoEntity[];
+  
 }

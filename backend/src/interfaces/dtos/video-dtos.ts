@@ -11,12 +11,9 @@ export interface CreateVideoDto {
   uploadedByUserId?: number;
   status?: VIDEO_STATUS;
   processingStatus?: UPLOAD_STATUS;
-  files?: [
-    {
-      url: string;
-      type: FILE_TYPE;
-    }
-  ];
+  thumbnail : string
+  video: string
+
 }
 
 export interface GetAllVideosQuery {

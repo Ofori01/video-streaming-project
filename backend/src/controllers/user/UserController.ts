@@ -10,6 +10,7 @@ import { UserRolesEntity } from "../../entities/UserRolesEntity";
 import { AppDataSource } from "../../config/db.config";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 import bcrypt from 'bcryptjs'
+import { NotFoundError } from "../../middlewares/errorHandler/errors/NotFoundError";
 
 export class UserController {
   constructor(private _userService: UserService) {}
@@ -80,9 +81,8 @@ export class UserController {
         where: { name: req.body.role },
       });
       if (!role) {
-        return res
-          .status(400)
-          .send({ message: `Invalid role: ${req.body.role}` });
+        throw new NotFoundError(`Invalid role: ${req.body.role}`)
+        
       }
       const user = new UserEntity();
       user.email = req.body.email;
@@ -91,15 +91,10 @@ export class UserController {
       user.role = role;
 
       const newUser = await this._userService.Create(user);
-      return res.status(201).send({
-        message: "User created successfully",
-        data: newUser,
-      });
+      return responseHandler.created(res, newUser, "User created successfully")
+      
     } catch (error) {
-      console.log(error);
-      return res.status(500).send({
-        message: "unsuccessful",
-      });
+      return next(error)
     }
   };
 

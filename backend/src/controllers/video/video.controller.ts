@@ -65,7 +65,6 @@ export class VideoController {
             },
             relations: {
                 uploadedBy: true,
-                files: true,
                 category: true
             },
             select: {
