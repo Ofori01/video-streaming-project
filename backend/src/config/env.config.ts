@@ -7,8 +7,8 @@ class Config {
   private _EnvSchema = z.object({
     PORT: z.coerce.number(),
     LOCAL_URL: z.string(),
-    JWT_SECRET: z.coerce.string(),
-    JWT_EXPIRES_IN: z.coerce.string()
+    JWT_SECRET: z.string(),
+    JWT_EXPIRES_IN: z.string()
     
   });
 

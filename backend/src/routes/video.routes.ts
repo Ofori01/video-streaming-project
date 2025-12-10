@@ -18,6 +18,11 @@ videoRoutes.post(
   authMiddleware.authorize(USER_ROLE.ADMIN),
   videoController.CreateVideo
 );
-videoRoutes.get('', authMiddleware.authorize(USER_ROLE.ADMIN), videoController.GetAllVideos)
+videoRoutes.get("", videoController.GetAllVideosUser);
+videoRoutes.get(
+  "/admin",
+  authMiddleware.authorize(USER_ROLE.ADMIN),
+  videoController.GetAllVideosAdmin
+);
 
 export default videoRoutes;

@@ -3,10 +3,12 @@ import express, { Response } from "express";
 import { initializeDb } from "./config/db.config";
 import routes from "./routes";
 import { errorHandler } from "./middlewares/errorHandler/ErrorHandler";
+import envConfig from "./config/env.config";
+import { en } from "zod/v4/locales";
 
 const app = express();
 
-const PORT = 5000;
+
 
 app.use(express.json());
 
@@ -24,8 +26,8 @@ app.use((req, res:Response)=>{
 }) 
 //initialize db before server connection
 initializeDb().then(()=>{
-  app.listen(PORT, async () => {
-    console.log(`server started on port ${PORT}`);
+  app.listen(envConfig.PORT, async () => {
+    console.log(`server started on port ${envConfig.PORT}`);
   });
 
 })
