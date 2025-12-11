@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { UserEntity } from "../../entities/UserEntity";
 import { TokenContent } from "../../interfaces/common/tokenContent";
 
 export interface AuthRequest<
