@@ -20,7 +20,7 @@ export const errorHandler = (
   }
   if (err instanceof ValidationError) {
     // console.error(err);
-    errors = err.inner.map(e=> ({message: e.errors[0], field: e.path}))
+    errors = err.inner.map(e=> ({message: e.errors.join(", "), field: e.path}))
     
   }
 
