@@ -8,7 +8,8 @@ export const validate =  (schema: Schema) => {
         await schema.validate({
             body: req.body,
             params: req.params,
-            query: req.query
+            query: req.query,
+            files: req.files
         }, {abortEarly: false})
         return next()
     } catch (error : any) {

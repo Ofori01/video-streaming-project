@@ -20,6 +20,7 @@ export const errorHandler = (
   }
   if (err instanceof ValidationError) {
     // console.error(err);
+    statusCode = 400
     errors = err.inner.map(e=> ({message: e.errors.join(", "), field: e.path}))
     
   }

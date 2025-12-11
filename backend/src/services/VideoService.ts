@@ -3,6 +3,7 @@ import { CategoryEntity } from "../entities/CategoryEntity";
 import { FileEntity } from "../entities/FilesEntity";
 import { UserEntity } from "../entities/UserEntity";
 import { VideoEntity } from "../entities/VideoEntity";
+import { UploadFiles } from "../interfaces/common/Files";
 import { CreateVideoDto } from "../interfaces/dtos/video-dtos";
 import { IVideoRepository } from "../interfaces/repositories/IVideoRepository";
 import { IVideoService } from "../interfaces/services/IVideoService";
@@ -21,7 +22,7 @@ export class VideoService
     super(videoRepository);
   }
 
-  CreateVideo(dto: CreateVideoDto): Promise<VideoEntity> {
+  CreateVideo(dto: CreateVideoDto, files: UploadFiles): Promise<VideoEntity> {
     return AppDataSource.transaction(async (transactionManager) => {
       const Category = await transactionManager
         .getRepository(CategoryEntity)
@@ -41,11 +42,11 @@ export class VideoService
 
       const thumbnail = fileRepo.create({
         type: FILE_TYPE.THUMBNAIL,
-        url: dto.thumbnail,
+        url: 'uploads/'+files.thumbnail?.[0].filename
       });
       const video = fileRepo.create({
         type: FILE_TYPE.VIDEO,
-        url: dto.video,
+        url: 'uploads/'+files.video?.[0].filename,
       });
 
       await fileRepo.save([thumbnail, video]);
