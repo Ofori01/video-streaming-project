@@ -1,7 +1,6 @@
-
-
 import type { NextFunction, Request, Response } from "express";
 import CustomError from "./errors/CustomError";
+import { ValidationError } from "yup";
 
 export const errorHandler = (
   err: Error | CustomError,
@@ -9,7 +8,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log(err); // ? for debugging
+  // console.log(err); // ? for debugging
   let statusCode = 500;
   let message = "Internal Server Error";
   let errors: { message: string; field?: string }[] | undefined = undefined;
@@ -19,12 +18,15 @@ export const errorHandler = (
     message = err.message;
     errors = err.errors;
   }
-  //Todo -  Add type orm Validation Error
-  
+  if (err instanceof ValidationError) {
+    // console.error(err);
+    errors = err.inner.map(e=> ({message: e.errors[0], field: e.path}))
+    
+  }
+
   // Todo - Add Cast Error (invalid ObjectId, etc.)
-  
+
   // Todo - Add  Duplicate Key Error
-  
 
   // JWT Errors
   else if (err.name === "JsonWebTokenError") {

@@ -15,9 +15,9 @@ export class VideoService
   implements IVideoService
 {
   constructor(
-    protected videoRepository: IVideoRepository,
-    // private _categoryRepository: ICategoryRepository
-  ) {
+    protected videoRepository: IVideoRepository
+  ) // private _categoryRepository: ICategoryRepository
+  {
     super(videoRepository);
   }
 
@@ -37,16 +37,18 @@ export class VideoService
         throw new NotFoundError("Uploaded By user not found");
       }
       const videoRepo = transactionManager.getRepository(VideoEntity);
-      const fileRepo = transactionManager.getRepository(FileEntity)
+      const fileRepo = transactionManager.getRepository(FileEntity);
 
       const thumbnail = fileRepo.create({
         type: FILE_TYPE.THUMBNAIL,
         url: dto.thumbnail,
-      })
+      });
       const video = fileRepo.create({
         type: FILE_TYPE.VIDEO,
-        url: dto.video
-      })
+        url: dto.video,
+      });
+
+      await fileRepo.save([thumbnail, video]);
 
       const newVideo = videoRepo.create({
         title: dto.title,
@@ -55,23 +57,29 @@ export class VideoService
         processingStatus: dto.processingStatus,
         category: Category,
         uploadedBy: uploader,
+        thumbnail: thumbnail,
+        video: video,
       });
       await videoRepo.save(newVideo);
 
-    
-      //TODO - use select to remove some fields eg password
       return await videoRepo.findOneOrFail({
         where: {
-          id: video.id,
+          id: newVideo.id,
         },
         relations: {
           thumbnail: true,
           video: true,
           category: true,
           uploadedBy: true,
+        },
+        select: {
+          uploadedBy: {
+            password: false,
+            username: true,
+            id: true
+          }
         }
       });
     });
   }
-  
 }
