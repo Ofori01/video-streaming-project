@@ -1,6 +1,7 @@
 import {
   CreateVideoDto,
   GetAllVideosQuery,
+  GetVideoQueryDto,
 } from "../../interfaces/dtos/video-dtos";
 import { IVideoService } from "../../interfaces/services/IVideoService";
 import { AuthRequest } from "../../middlewares/auth/AuthRequest";
@@ -15,6 +16,7 @@ import { FindOptionsWhere } from "typeorm";
 import { UserEntity } from "../../entities/UserEntity";
 import { VideoEntity } from "../../entities/VideoEntity";
 import { UploadFiles } from "../../interfaces/common/Files";
+import { vi } from "zod/v4/locales";
 
 export class VideoController {
   constructor(private _videoService: IVideoService) {}
@@ -99,4 +101,18 @@ export class VideoController {
       return next(error);
     }
   };
+
+  GetVideoById = async( req: AuthRequest<GetVideoQueryDto>, res: Response, next: NextFunction) => {
+    try {
+      const video = await this._videoService.GetById(req.params.id, {relations: {
+        category: true,
+        uploadedBy: true,
+        thumbnail: true,
+        video: true
+      }})
+      return responseHandler.success(res,video)
+    } catch (error) {
+      return next(error)
+    }
+  }
 }

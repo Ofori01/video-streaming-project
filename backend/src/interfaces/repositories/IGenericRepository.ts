@@ -4,7 +4,7 @@ export interface IGenericRepository<T> {
   Create(entity: T): Promise<T>;
   GetAll(options?: FindManyOptions<T>): Promise<T[]>;
   GetOne(options: FindOneOptions): Promise<T| null>;
-  GetById(id: number): Promise<T>;
+  GetById(id: number, options: FindOneOptions<T>): Promise<T>;
   Update(id: number, entity: T): Promise<T>;
   Delete(id: number): Promise<void>;
 }

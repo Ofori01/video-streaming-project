@@ -1,26 +1,15 @@
+import { Get } from './../../../node_modules/type-fest/source/get.d';
 import { InferType, mixed, number, object, string } from "yup";
-import {
-  FILE_TYPE,
-  UPLOAD_STATUS,
-  VIDEO_STATUS,
-} from "../../lib/types/common/enums";
 import { title } from "process";
 
-export interface CreateVideoDto {
-  title: string;
-  description: string;
-  categoryId: number;
-  uploadedByUserId?: number;
-  status?: VIDEO_STATUS;
-  processingStatus?: UPLOAD_STATUS;
-  thumbnail: string;
-  video: string;
-}
+
 export interface GetAllVideosQuery {
   categoryId?: number;
   
 }
 
+
+//create video---
 
 const CreateVideoBodySchema = object({
   title: string()
@@ -30,10 +19,30 @@ const CreateVideoBodySchema = object({
     categoryId: number().required("categoryId is required"),
     uploadedByUserId: number().optional(),
 });
+export const CreateVideoFilesSchema = object({
+  thumbnail: mixed()
+    .required("thumbnail is required")
+    .test("thumb-count", "thumbnail must contain exactly 1 file", (v) => Array.isArray(v) && v.length === 1),
+  video: mixed()
+    .required("video is required")
+    .test("video-count", "video must contain exactly 1 file", (v) => Array.isArray(v) && v.length === 1),
+});
 
 export interface CreateVideoDto extends InferType<typeof CreateVideoBodySchema>{}
 
 
 export const CreateVideoSchema = object({
-  body: CreateVideoBodySchema
+  body: CreateVideoBodySchema,
+  files: CreateVideoFilesSchema
+})
+
+
+const GetVideoQueryParams = object({
+  id: number().required("Video id is required"),
+})
+export interface GetVideoQueryDto extends InferType<typeof GetVideoQueryParams>{}
+
+export const GetVideoSchema = object({
+  params: GetVideoQueryParams
+
 })

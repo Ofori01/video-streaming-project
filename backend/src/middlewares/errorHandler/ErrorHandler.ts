@@ -17,10 +17,12 @@ export const errorHandler = (
     statusCode = err.statusCode;
     message = err.message;
     errors = err.errors;
+    console.log(err)
   }
-  if (err instanceof ValidationError) {
+  else if (err instanceof ValidationError) {
     // console.error(err);
     statusCode = 400
+    message = "Validation failed"
     errors = err.inner.map(e=> ({message: e.errors.join(", "), field: e.path}))
     
   }

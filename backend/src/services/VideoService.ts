@@ -54,8 +54,6 @@ export class VideoService
       const newVideo = videoRepo.create({
         title: dto.title,
         description: dto.description,
-        status: dto.status,
-        processingStatus: dto.processingStatus,
         category: Category,
         uploadedBy: uploader,
         thumbnail: thumbnail,
