@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import CustomError from "./errors/CustomError";
 import { ValidationError } from "yup";
+import multer from "multer";
 
 export const errorHandler = (
   err: Error | CustomError,
@@ -25,6 +26,11 @@ export const errorHandler = (
     message = "Validation failed"
     errors = err.inner.map(e=> ({message: e.errors.join(", "), field: e.path}))
     
+  }
+
+  else if (err instanceof multer.MulterError){
+    message = "An error occurred while uploading"
+    errors = [{message: err.message, field: err.field}]
   }
 
   // Todo - Add Cast Error (invalid ObjectId, etc.)
