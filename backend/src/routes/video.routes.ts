@@ -10,11 +10,13 @@ import {
   CreateVideoSchema,
   GetVideoSchema,
 } from "../interfaces/dtos/video-dtos";
+import S3StorageService from "../services/StorageService";
 
 const videoRoutes = Router();
 
 const videoRepository = new VideoRepository();
-const videoService = new VideoService(videoRepository);
+const s3Service = new S3StorageService()
+const videoService = new VideoService(videoRepository, s3Service);
 const videoController = new VideoController(videoService);
 
 videoRoutes.use(authMiddleware.authenticate);

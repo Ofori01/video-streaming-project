@@ -1,3 +1,4 @@
+import path from "path";
 import { AppDataSource } from "../config/db.config";
 import { CategoryEntity } from "../entities/CategoryEntity";
 import { FileEntity } from "../entities/FilesEntity";
@@ -10,19 +11,57 @@ import { IVideoService } from "../interfaces/services/IVideoService";
 import { FILE_TYPE } from "../lib/types/common/enums";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import { GenericService } from "./GenericService";
+import S3StorageService from "./StorageService";
+import CustomError from "../middlewares/errorHandler/errors/CustomError";
 
 export class VideoService
   extends GenericService<VideoEntity>
   implements IVideoService
 {
   constructor(
-    protected videoRepository: IVideoRepository
-  ) // private _categoryRepository: ICategoryRepository
-  {
+    protected videoRepository: IVideoRepository,
+    protected S3Service: S3StorageService // private _categoryRepository: ICategoryRepository
+  ) {
     super(videoRepository);
   }
 
-  CreateVideo(dto: CreateVideoDto, files: UploadFiles): Promise<VideoEntity> {
+  async CreateVideo(
+    dto: CreateVideoDto,
+    files: UploadFiles,
+    user: number
+  ): Promise<VideoEntity> {
+    //upload video to s3
+    const thumbnailFile = files.thumbnail?.[0];
+    const videoFile = files.video?.[0];
+
+    if (!thumbnailFile || !videoFile) {
+      throw new CustomError("video and thumbnail files are expected", 400);
+    }
+
+    const baseKey = `${user}/${Date.now()}`;
+    const [S3thumbnail, S3video] = await Promise.all([
+      this.S3Service.upload({
+        body: thumbnailFile.buffer,
+        key: `thumbnail/${baseKey}${path
+          .extname(thumbnailFile.originalname)
+          .toLowerCase()}`,
+        contentType: thumbnailFile.mimetype,
+        metaData: {
+          createdAt: Date.now().toString(),
+        },
+      }),
+
+      this.S3Service.upload({
+        body: videoFile.buffer,
+        key: `video/${baseKey}${path.extname(videoFile.originalname)}`,
+        contentType: videoFile.mimetype,
+        metaData: {
+          createdAt: Date.now().toString(),
+        },
+      }),
+    ]);
+
+    //save video to db
     return AppDataSource.transaction(async (transactionManager) => {
       const Category = await transactionManager
         .getRepository(CategoryEntity)
@@ -42,11 +81,11 @@ export class VideoService
 
       const thumbnail = fileRepo.create({
         type: FILE_TYPE.THUMBNAIL,
-        url: 'uploads/'+files.thumbnail?.[0].filename
+        url: S3thumbnail.url
       });
       const video = fileRepo.create({
         type: FILE_TYPE.VIDEO,
-        url: 'uploads/'+files.video?.[0].filename,
+        url: S3video.url
       });
 
       await fileRepo.save([thumbnail, video]);
@@ -75,9 +114,9 @@ export class VideoService
           uploadedBy: {
             password: false,
             username: true,
-            id: true
-          }
-        }
+            id: true,
+          },
+        },
       });
     });
   }

@@ -3,13 +3,12 @@ import S3 from "../lib/aws/awsClient"
 import envConfig from "../config/env.config"
 
 
-class S3StorageService {
-    private _bucket : string
+export default class S3StorageService {
 
     constructor(){}
 
     GetPublicUrl(key: string){
-        return `${envConfig.AWS_BASE_URL}/key`
+        return `${envConfig.AWS_BASE_URL}/${key}`
     }
 
     async upload(params: {
@@ -29,11 +28,11 @@ class S3StorageService {
 
             }
         })
-
-        await uploader.done()
+        // Todo - add progress event response to client
         uploader.on("httpUploadProgress" ,(progress)=> {
             console.log(progress )
         })
+        await uploader.done()
         return {
             key: params.key, url: this.GetPublicUrl(params.key)
         }
