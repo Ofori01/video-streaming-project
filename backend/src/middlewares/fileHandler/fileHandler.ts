@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 const allowedFields  = Object.values(FILE_TYPE)
 
 //TODO - add allowed file types
-// const allowedImage = ['image/jpe', 'application/json']
+// const allowedImage = ['image/jpe']
 
 const fileFilter: multer.Options["fileFilter"] = (req,file, cb) => {
   if(!allowedFields.includes(file.fieldname as FILE_TYPE)){
