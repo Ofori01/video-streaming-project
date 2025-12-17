@@ -8,8 +8,12 @@ class Config {
     PORT: z.coerce.number(),
     LOCAL_URL: z.string(),
     JWT_SECRET: z.string(),
-    JWT_EXPIRES_IN: z.string()
-    
+    JWT_EXPIRES_IN: z.string(),
+    AWS_REGION: z.string(),
+    AWS_ACCESS_KEY: z.string(),
+    AWS_SECRET_ACCESS_KEY: z.string(),
+    AWS_BASE_URL: z.string(),
+    AWS_BUCKET: z.string()
   });
 
   private _env: z.infer<typeof this._EnvSchema>;

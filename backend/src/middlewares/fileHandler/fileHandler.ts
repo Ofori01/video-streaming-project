@@ -3,14 +3,16 @@ import path from "path";
 import { FILE_TYPE } from "../../lib/types/common/enums";
 import CustomError from "../errorHandler/errors/CustomError";
 
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename(req, file, callback) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileExt = path.extname(file.originalname).toLocaleLowerCase();
-    callback(null, `${file.fieldname}-${uniqueSuffix}${fileExt}`);
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: "uploads",
+//   filename(req, file, callback) {
+//     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+//     const fileExt = path.extname(file.originalname).toLocaleLowerCase();
+//     callback(null, `${file.fieldname}-${uniqueSuffix}${fileExt}`);
+//   },
+// });
+
+const storage = multer.memoryStorage()
 
 
 const allowedFields  = Object.values(FILE_TYPE)

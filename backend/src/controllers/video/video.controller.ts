@@ -28,9 +28,11 @@ export class VideoController {
   ) => {
     try {
       req.body.uploadedByUserId = req.user?.id;
+      
       const video = await this._videoService.CreateVideo(
         req.body,
-        req.files as UploadFiles
+        req.files as UploadFiles,
+        req.user?.id!
       );
       return responseHandler.created(res, video, "Video created successfully");
     } catch (error) {
