@@ -15,7 +15,7 @@ import S3StorageService from "../services/StorageService";
 const videoRoutes = Router();
 
 const videoRepository = new VideoRepository();
-const s3Service = new S3StorageService()
+const s3Service = new S3StorageService();
 const videoService = new VideoService(videoRepository, s3Service);
 const videoController = new VideoController(videoService);
 
@@ -59,7 +59,6 @@ videoRoutes.post(
   videoController.CreateVideo
 );
 
-
 /**
  * @swagger
  * /video:
@@ -102,7 +101,7 @@ videoRoutes.get("", videoController.GetAllVideos);
  *       200:
  *         description: Video details
  *         content:
- *           application/json:
+ *           "application/json":
  *             schema:
  *               $ref: '#/components/schemas/VideoResponse'
  *       400:
@@ -115,6 +114,5 @@ videoRoutes.get("", videoController.GetAllVideos);
  *         $ref: '#/components/responses/ServerError'
  */
 videoRoutes.get("/:id", validate(GetVideoSchema), videoController.GetVideoById);
- 
 
 export default videoRoutes;
