@@ -20,7 +20,37 @@ const videoService = new VideoService(videoRepository, s3Service);
 const videoController = new VideoController(videoService);
 
 videoRoutes.use(authMiddleware.authenticate);
-
+/**
+ * @swagger
+ * /video:
+ *   post:
+ *     summary: Create a new video
+ *     description: Admin-only. Upload a video file and metadata.
+ *     tags: [Videos]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateVideoInput'
+ *     responses:
+ *       201:
+ *         description: Video created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 videoRoutes.post(
   "",
   authMiddleware.authorize(USER_ROLE.ADMIN),
@@ -28,12 +58,11 @@ videoRoutes.post(
   validate(CreateVideoSchema),
   videoController.CreateVideo
 );
+
 videoRoutes.get("", videoController.GetAllVideos);
+
+
 videoRoutes.get("/:id", validate(GetVideoSchema), videoController.GetVideoById);
-// videoRoutes.get(
-//   "/admin",
-//   authMiddleware.authorize(USER_ROLE.ADMIN),
-//   videoController.GetAllVideosAdmin
-// );
+ 
 
 export default videoRoutes;
