@@ -13,10 +13,8 @@ import {
   VIDEO_STATUS,
 } from "../../lib/types/common/enums";
 import { FindOptionsWhere } from "typeorm";
-import { UserEntity } from "../../entities/UserEntity";
 import { VideoEntity } from "../../entities/VideoEntity";
 import { UploadFiles } from "../../interfaces/common/Files";
-import { vi } from "zod/v4/locales";
 
 export class VideoController {
   constructor(private _videoService: IVideoService) {}

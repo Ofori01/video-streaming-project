@@ -38,7 +38,7 @@ export class VideoService
       throw new CustomError("video and thumbnail files are expected", 400);
     }
 
-    const baseKey = `${user}/${Date.now()}`;
+    const baseKey = `${user}/${Date.now()}`; //uuid
     const [S3thumbnail, S3video] = await Promise.all([
       this.S3Service.upload({
         body: thumbnailFile.buffer,
