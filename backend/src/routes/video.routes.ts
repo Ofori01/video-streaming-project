@@ -59,9 +59,61 @@ videoRoutes.post(
   videoController.CreateVideo
 );
 
+
+/**
+ * @swagger
+ * /video:
+ *   get:
+ *     summary: Get all videos
+ *     tags: [Videos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of videos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideosListResponse'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 videoRoutes.get("", videoController.GetAllVideos);
 
-
+/**
+ * @swagger
+ * /video/{id}:
+ *   get:
+ *     summary: Get a video by ID
+ *     tags: [Videos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Numeric video ID
+ *         schema:
+ *           type: integer
+ *           example: 12
+ *     responses:
+ *       200:
+ *         description: Video details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 videoRoutes.get("/:id", validate(GetVideoSchema), videoController.GetVideoById);
  
 

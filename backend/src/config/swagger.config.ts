@@ -145,6 +145,37 @@ const options: swaggerJSDoc.Options = {
           },
           required: ["data"],
         },
+        VideosListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {$ref: '#/components/schemas/Video'},
+              message: { type: "string", nullable: true }
+            },
+            timestamp: "date-time"
+          },
+          required: ['data'],
+          example: {
+            data: [
+              {
+                id: 12,
+                title: "Js tutorials",
+                description: "Introduction to javascript",
+                status: "archived",
+                processingStatus: "pending",
+                category: { id: 3, name: "Sports" },
+                uploadedBy: { id: 12, username: "testUser9", email: "testemail9" },
+                thumbnail: { id: 21, url: "https://...", type: "thumbnail" },
+                video: { id: 22, url: "https://...", type: "video" },
+                createdAt: "2025-12-17T15:47:42.341Z",
+                updatedAt: "2025-12-17T15:47:42.341Z"
+              }
+            ],
+            message: null
+          }
+        },
+        
       },
       responses: {
         BadRequest: {
