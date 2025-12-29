@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
-    <nav className="flex flex-wrap md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0">
+    <nav className="flex flex-wrap md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
       <Link
         to="/"
         className="flex flex-row items-center gap-x-3 hover:cursor-pointer"
