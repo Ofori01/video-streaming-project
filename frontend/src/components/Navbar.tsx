@@ -6,9 +6,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "./ui/navigation-menu";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X } from "lucide-react";
+import { Bell, Menu, Search, X } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -18,10 +18,13 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="flex flex-wrap md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0">
-      <div className="flex flex-row items-center gap-x-1">
+      <Link
+        to="/"
+        className="flex flex-row items-center gap-x-3 hover:cursor-pointer"
+      >
         <img src={Logo} alt="StreamVibe logo" />
         <h1>StreamVibe</h1>
-      </div>
+      </Link>
 
       <div className="relative">
         {/* for mobile */}
@@ -40,7 +43,7 @@ const Navbar: React.FC = () => {
                   isMenuOpen ? "block" : "hidden"
                 } `
               : "block"
-          }    p-2 bg-black rounded-lg text-gray-300 outline-2 outline-slate-300`}
+          }    p-2 bg-black rounded-lg text-gray-300 outline-2 outline-ring`}
         >
           <NavigationMenuList
             className={`flex ${
@@ -50,21 +53,30 @@ const Navbar: React.FC = () => {
             {navbarItems.map((navItem) => (
               <NavigationMenuItem key={navItem.title}>
                 <NavigationMenuLink asChild>
-                  <Link
+                  <NavLink
                     to={navItem.href}
                     onClick={() => isMobile && setIsMenuOpen(false)}
                   >
                     {" "}
                     {navItem.title}{" "}
-                  </Link>
+                  </NavLink>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
           </NavigationMenuList>
         </NavigationMenu>
       </div>
-      {!isMobile &&<button>Get Started</button>  }
-      
+      {!isMobile && (
+        <div className="flex flex-row align-items-center justify-content-center gap-x-5 text-secondary ">
+          {/* notification and search icon */}
+          <button>
+            <Bell />
+          </button>
+          <button>
+            <Search />
+          </button>
+        </div>
+      )}
     </nav>
   );
 };

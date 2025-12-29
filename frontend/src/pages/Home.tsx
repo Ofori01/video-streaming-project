@@ -1,10 +1,20 @@
+import bannerImage1 from "../assets/banner_1.png";
+import React from "react";
 
-import React from 'react'
-
-const Home : React.FC = () => {
+const Home: React.FC = () => {
   return (
-    <div>Home</div>
-  )
-}
+    <div className="relative -z-100">
+        {/* banner image */}
+        <img src={bannerImage1} alt="banner" className="object-cover object-top w-full h-screen" />
 
-export default Home
+        {/* title and categories */}
+        {/* brief description */}
+
+        {/* play button with details button  */}
+
+        {/* carousel */}
+    </div>
+  );
+};
+
+export default Home;
