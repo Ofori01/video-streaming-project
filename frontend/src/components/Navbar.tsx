@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
         className="flex flex-row items-center gap-x-3 hover:cursor-pointer"
       >
         <img src={Logo} alt="StreamVibe logo" />
-        <h1>StreamVibe</h1>
+        <h1 className="text-secondary font-body">StreamVibe</h1>
       </Link>
 
       <div className="relative">

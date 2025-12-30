@@ -1,44 +1,47 @@
+import { Clock4, Eye } from "lucide-react";
 import React from "react";
-import { Card, CardFooter, CardHeader, CardTitle } from "../ui/card";
-import { User } from "lucide-react";
 
 interface MovieCardProps {
-  title: string;
   thumbnail: string;
-  duration: number;
-  author: string;
+  views: string;
+  duration: string;
+  title: string;
+  description: string;
 }
 
-const MovieCardBanner: React.FC<MovieCardProps> = ({
-  title,
-  author,
+const MovieCard: React.FC<MovieCardProps> = ({
+  description,
   duration,
   thumbnail,
+  title,
+  views,
 }) => {
   return (
-    <Card className="w-full max-w-sm overflow-hidden relative min-h-48 p-0! border-0 flex flex-col justify-between">
-      {/* Background image */}
-      <img
-        src={thumbnail}
-        alt={title}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-
-      <CardHeader className="p-3 relative">
-        <span className="outline text-secondary rounded-[1234px] px-3 py-1 text-sm w-fit">
-          {duration} min
-        </span>
-      </CardHeader>
-
-      <CardFooter className="relative flex flex-row px-3 py-2 items-center justify-between bg-linear-to-t from-black/60 to-transparent">
-        <CardTitle className="font-heading text-white text-2xl tracking-wider">{title}</CardTitle>
-        <span className="inline-flex gap-x-2 p-2 font-body items-center text-secondary backdrop-blur-sm bg-secondary/30 rounded-xl">
-          <User size={16} />
-          <p>{author}</p>
-        </span>
-      </CardFooter>
-    </Card>
+    <div className="flex flex-col gap-y-4 p-3 h-full  outline rounded-lg bg-gray-100/10 backdrop-blur-xl">
+      <div className="relative w-full  aspect-4/5 overflow-hidden rounded-lg">
+        <img
+          className="w-full h-full object-cover"
+          src={thumbnail}
+          alt="Movie poster"
+        />
+      </div>
+      {/* title and description */}
+      <div>
+        <h3 className="text-xl tracking-wide line-clamp-1">{title}</h3>
+        <span className=" text-wrap font-body text-gray-400  text-xs line-clamp-2 "> {description} </span>
+      </div>
+      <div className="inline-flex mt-auto justify-between  items-center text-xs md:text-sm">
+        <div className="rounded-[1234px] outline bg-transparent inline-flex items-center gap-x-1 px-2 py-1  w-fit">
+          <Clock4 size={16} />
+          <span>{duration}</span>
+        </div>
+        <div className="rounded-[1234px]  outline bg-transparent inline-flex items-center gap-x-1 px-2 py-1  w-fit">
+          <Eye size={16} />
+          <span>{views}</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default MovieCardBanner;
+export default React.memo(MovieCard);
