@@ -6,7 +6,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "./ui/navigation-menu";
-import { Link, NavLink } from "react-router-dom";
+import {  Link, NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Bell, Menu, Search, X } from "lucide-react";
 
@@ -15,6 +15,7 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const location = useLocation();
 
   return (
     <nav className="flex flex-wrap md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
@@ -52,13 +53,15 @@ const Navbar: React.FC = () => {
           >
             {navbarItems.map((navItem) => (
               <NavigationMenuItem key={navItem.title}>
-                <NavigationMenuLink asChild>
+                <NavigationMenuLink
+                  asChild
+                  data-active={location.pathname === navItem.href}
+                >
                   <NavLink
                     to={navItem.href}
                     onClick={() => isMobile && setIsMenuOpen(false)}
                   >
-                    {" "}
-                    {navItem.title}{" "}
+                    {navItem.title}
                   </NavLink>
                 </NavigationMenuLink>
               </NavigationMenuItem>

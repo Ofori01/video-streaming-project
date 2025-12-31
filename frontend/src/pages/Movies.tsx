@@ -6,7 +6,7 @@ const Movies: React.FC = () => {
   return (
     <div className="bg-black text-secondary relative px-15 py-15">
       {/* filters bar */}
-      <FilterBar className="mt-15" />
+      <FilterBar className="mt-10 top-10" />
 
       {/* movie list, 3 columns */}
       <div className="mt-5 grid grid-cols-1 gap-y-5 gap-x-5 md:grid-cols-2 lg:grid-cols-3">

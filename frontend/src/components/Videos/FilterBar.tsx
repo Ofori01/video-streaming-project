@@ -11,9 +11,7 @@ import { cn } from "@/lib/utils";
 
 const FilterBar: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <div
-      className={cn("backdrop-blur-3xl bg-black/30 mt-8 top-10 z-10", className)}
-    >
+    <div className={cn("backdrop-blur-3xl z-10", className)}>
       {/* left arrow */}
       {/* right arrow */}
       {/* filters */}
@@ -23,8 +21,8 @@ const FilterBar: React.FC<{ className?: string }> = ({ className }) => {
           align: "start",
         }}
       >
-        <CarouselContent className="md:-ml-4">
-          <CarouselItem className="pl-2 md:pl-4 py-2 basis-auto">
+        <CarouselContent className="md:-ml-4 bg-">
+          <CarouselItem className="pl-2 md:pl-4 py-2 basis-auto bg-transparent">
             <Category categoryName="All" isActive={true} />
           </CarouselItem>
           <CarouselItem className="pl-2 md:pl-4 py-2 basis-auto">
@@ -121,11 +119,11 @@ const FilterBarNavButtons = () => {
   return (
     <>
       {canScrollNext && (
-        <CarouselNext className="absolute text-secondary bg-black outline-none border-0 right-0" />
+        <CarouselNext className="absolute text-secondary bg-black outline-none border-0 right-0 " />
       )}
 
       {canScrollPrev && (
-        <CarouselPrevious className="absolute left-0 bg-black border-0" />
+        <CarouselPrevious className="absolute left-0 bg-black border-0 " />
       )}
     </>
   );

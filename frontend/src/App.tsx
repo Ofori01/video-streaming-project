@@ -8,7 +8,7 @@ import Movie from './pages/Movie'
 function App() {
 
   return (
-    <Routes >
+    <Routes>
       <Route path='/*' element={<MainLayout/>} >
         <Route index element={<Home/>} />
         <Route path='movies' element={<Movies/>} />
