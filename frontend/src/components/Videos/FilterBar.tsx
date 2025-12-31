@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const FilterBar: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <div
-      className={cn("sticky backdrop-blur-3xl bg-transparent mt-8", className)}
+      className={cn("backdrop-blur-3xl bg-black/30 mt-8 top-10 z-10", className)}
     >
       {/* left arrow */}
       {/* right arrow */}

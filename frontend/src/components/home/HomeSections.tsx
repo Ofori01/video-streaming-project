@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import MovieCard from "./MovieCard";
+import VideoPosterCard from "./VideoPosterCard";
 import CarouselNavigation from "./CarouselNavigation";
 import {
   Carousel,
@@ -29,7 +29,7 @@ const HomeSections: React.FC<HomeSectionProps> = ({
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
@@ -39,7 +39,7 @@ const HomeSections: React.FC<HomeSectionProps> = ({
     }
 
     const updateScrollState = () => {
-      setCount(api.scrollSnapList().length)
+      setCount(api.scrollSnapList().length);
       setCurrent(api.selectedScrollSnap() + 1);
       setCanScrollPrev(api.canScrollPrev());
       setCanScrollNext(api.canScrollNext());
@@ -88,7 +88,7 @@ const HomeSections: React.FC<HomeSectionProps> = ({
               key={video.id}
               className="basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
             >
-              <MovieCard
+              <VideoPosterCard
                 description={video.description}
                 title={video.title}
                 thumbnail={video.thumbnail}

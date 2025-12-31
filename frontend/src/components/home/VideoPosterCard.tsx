@@ -1,7 +1,7 @@
 import { Clock4, Eye } from "lucide-react";
 import React from "react";
 
-interface MovieCardProps {
+interface VideoPosterCardProps {
   thumbnail: string;
   views: string;
   duration: string;
@@ -9,7 +9,7 @@ interface MovieCardProps {
   description: string;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({
+const VideoPosterCard: React.FC<VideoPosterCardProps> = ({
   description,
   duration,
   thumbnail,
@@ -18,7 +18,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-y-4 p-3 h-full  outline rounded-lg bg-gray-100/10 backdrop-blur-xl">
-      <div className="relative w-full  aspect-4/5 overflow-hidden rounded-lg">
+      <div className="w-full  aspect-4/5 overflow-hidden rounded-lg">
         <img
           className="w-full h-full object-cover"
           src={thumbnail}
@@ -44,4 +44,4 @@ const MovieCard: React.FC<MovieCardProps> = ({
   );
 };
 
-export default React.memo(MovieCard);
+export default React.memo(VideoPosterCard);
