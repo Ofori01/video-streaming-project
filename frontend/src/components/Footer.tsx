@@ -4,7 +4,7 @@ import React from 'react'
 
 const Footer : React.FC = () => {
   return (
-    <footer>
+    <footer className=''>
       <h3>footer</h3>
     </footer>
   )
