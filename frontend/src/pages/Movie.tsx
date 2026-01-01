@@ -35,7 +35,7 @@ const Movie: React.FC = () => {
                   <span className="text-gray-400">34k followers</span>
                 </div>
               </div>
-              <button className="py-3 px-5 bg-gray-200 text-sm hover:bg-gray-300 text-primary rounded-[1234px]">
+              <button className="py-3 px-5 bg-gray-200 text-sm cursor-pointer hover:bg-gray-300 text-primary rounded-[1234px]">
                 Subscribe
               </button>
             </div>

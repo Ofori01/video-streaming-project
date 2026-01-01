@@ -31,7 +31,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
   return (
     <Link
       to={`/movies/${id}`}
-      className={` ${isHorizontal ? "flex-row" : "flex-col"} flex rounded-lg p-2  gap-y-2 hover:bg-red-900/30 hover:backdrop-blur-lg hover:cursor-pointer group transition-all ease-in-out duration-600`}
+      className={` ${isHorizontal ? "flex-row" : "flex-col"} flex rounded-lg p-2  gap-2 hover:bg-red-900/30 hover:backdrop-blur-lg hover:cursor-pointer group transition-all ease-in-out duration-600`}
     >
       {/* thumbnail and duration */}
       <div className="w-full aspect-video overflow-hidden rounded-lg relative">
@@ -57,12 +57,12 @@ const VideoCard: React.FC<VideoCardProps> = ({
             />
           </div>}
           {/* title and author name */}
-          <div className={` ${isHorizontal && "ml-2"} flex flex-col gap-y-0 items-start text-gray-400`}>
-            <span className="text-secondary line-clamp-2 text-wrap font-body">
+          <div className={`flex flex-col gap-y-0 items-start text-gray-400`}>
+            <span className="text-secondary text-md line-clamp-2 text-wrap font-body">
               {title}
             </span>
-            <span className="line-clamp-1 font-body">{author.name}</span>
-            <span className="inline-flex items-center font-body">
+            <span className="line-clamp-1 font-body text-wrap">{author.name}</span>
+            <span className="inline-flex items-center font-body text-nowrap">
               <p>{views} views</p>
               <Dot size={24} />
               <p> {createdAt} </p>
@@ -70,8 +70,8 @@ const VideoCard: React.FC<VideoCardProps> = ({
           </div>
         </div>
         <EllipsisVertical
-          size={32}
-          className="hover:bg-secondary/30 hover:backdrop-blur-2xl rounded-full p-2"
+          size={24}
+          className="hover:bg-secondary/30 hover:backdrop-blur-2xl rounded-full p-1"
         />
       </div>
     </Link>

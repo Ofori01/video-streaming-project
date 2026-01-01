@@ -37,7 +37,7 @@ const VideoDescriptionCard: React.FC<{
       {/* see more or less button */}
       {isDescriptionExpanded && (
         <button
-        className="cursor-pointer"
+        className="cursor-pointer hover:underline"
           onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
         >
           See Less
