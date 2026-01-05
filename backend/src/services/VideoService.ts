@@ -13,6 +13,7 @@ import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError"
 import { GenericService } from "./GenericService";
 import S3StorageService from "./StorageService";
 import CustomError from "../middlewares/errorHandler/errors/CustomError";
+import { v4 as uuidV4 } from "uuid";
 
 export class VideoService
   extends GenericService<VideoEntity>
@@ -38,7 +39,8 @@ export class VideoService
       throw new CustomError("video and thumbnail files are expected", 400);
     }
 
-    const baseKey = `${user}/${Date.now()}`; //uuid
+    // const baseKey = `${user}/${Date.now()}`; //uuid
+    const baseKey = uuidV4()
     const [S3thumbnail, S3video] = await Promise.all([
       this.S3Service.upload({
         body: thumbnailFile.buffer,
