@@ -19,7 +19,7 @@ const s3Service = new S3StorageService();
 const videoService = new VideoService(videoRepository, s3Service);
 const videoController = new VideoController(videoService);
 
-videoRoutes.use(authMiddleware.authenticate);
+// videoRoutes.use(authMiddleware.authenticate);
 /**
  * @swagger
  * /video:
