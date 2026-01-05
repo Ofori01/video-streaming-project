@@ -9,7 +9,7 @@ interface VideoCardProps {
     profileImage: string;
     name: string;
   };
-  duration: string;
+  duration: number | null;
   title: string;
   views: string;
   createdAt: string;
