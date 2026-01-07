@@ -1,3 +1,4 @@
+import { string } from "yup";
 import dotenv from "dotenv";
 import z from "zod";
 
@@ -13,7 +14,9 @@ class Config {
     AWS_ACCESS_KEY: z.string(),
     AWS_SECRET_ACCESS_KEY: z.string(),
     AWS_BASE_URL: z.string(),
-    AWS_BUCKET: z.string()
+    AWS_BUCKET: z.string(),
+    NODEMAILER_USER: z.string(),
+    NODEMAILER_USER_PASSWORD: z.string(),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;

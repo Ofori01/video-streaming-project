@@ -5,6 +5,7 @@ import CustomError from "../middlewares/errorHandler/errors/CustomError";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import EmailService from "./EmailService";
 
 export class AuthService {
   constructor(private _userRepository: IUserRepository) {}
@@ -32,12 +33,14 @@ export class AuthService {
       throw new CustomError("Incorrect password", 400);
     }
     //TODO - use in auth request type instead of userEntity
+
     const payload = {
       id: user.id,
       email: user.email,
       username: user.username,
       role: user.role?.name ??  'user'
     }
+    await EmailService.sendEmail("test email","oforidarkwah7@gmail.com","Test" )
     const token = this.generateToken(payload);
     return {user, token}
   }
