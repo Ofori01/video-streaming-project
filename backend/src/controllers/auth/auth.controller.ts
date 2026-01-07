@@ -12,12 +12,12 @@ export class AuthController {
     next: NextFunction
   ) => {
     try {
-      const { user, token } = await this._authService.login(
+      const { user } = await this._authService.login(
         req.body.email,
         req.body.password
       );
 
-      return responseHandler.success(res, { user, token }, "Login successful");
+      return responseHandler.success(res,{}, "Login successful, Verify otp");
     } catch (error) {
       return next(error);
     }

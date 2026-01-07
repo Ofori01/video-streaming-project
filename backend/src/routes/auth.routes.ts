@@ -1,3 +1,5 @@
+import { OtpRepository } from './../repositories/OtpRepository';
+import { OtpService } from './../services/OtpService';
 import { Router } from "express";
 import { AuthService } from "../services/AuthService";
 import { UserRepository } from "../repositories/UserRepository";
@@ -8,7 +10,9 @@ import { LoginSchema } from "../interfaces/dtos/auth-dtos";
 const authRoutes = Router();
 
 const userRepository = new UserRepository();
-const authService = new AuthService(userRepository);
+const otpRepository = new OtpRepository()
+const otpService = new OtpService(otpRepository)
+const authService = new AuthService(userRepository, otpService);
 const authController = new AuthController(authService);
 
 authRoutes.post("/login", validate(LoginSchema), authController.login);
