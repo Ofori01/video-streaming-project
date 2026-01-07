@@ -15,6 +15,10 @@ export abstract class GenericService<T extends BaseEntity>
     return await this._repository.GetAll(options);
   }
 
+  async GetOne(options: FindOneOptions<T>): Promise<T | null> {
+    return await this._repository.GetOne(options)
+  }
+
   async GetById(id: number, options: FindOneOptions): Promise<T> {
     return await this._repository.GetById(id, options);
   }
@@ -24,4 +28,5 @@ export abstract class GenericService<T extends BaseEntity>
   async Delete(id: number): Promise<void> {
     return await this._repository.Delete(id);
   }
+  
 }
