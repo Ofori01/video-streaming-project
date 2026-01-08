@@ -5,6 +5,10 @@ interface loginResponseData {
     id: number
     email: string
 }
+interface signUpResponseData {
+    id: number
+    email: string
+}
 interface VerifyOtpResponseData{
     token: string
     user: {
@@ -15,12 +19,8 @@ interface VerifyOtpResponseData{
     }
 }
 
-export interface LoginErrorResponse{
-    
-    success: boolean
-    message: string
 
-}
 
+export type SignUpDto = ApiSuccessResponse<signUpResponseData>
 export type VerifyOtpDto = ApiSuccessResponse<VerifyOtpResponseData>
 export type LoginDto=  ApiSuccessResponse<loginResponseData>

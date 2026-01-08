@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
+import { useSignUp } from "@/hooks/mutations/useAuthMutations";
 
 const formSchema = z.object({
   username: z
@@ -44,12 +45,12 @@ const formSchema = z.object({
 });
 
 interface SignUpFormProps {
-  handleSuccess?: (email: string) => void;
+  handleSuccess: (email: string) => void;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isPending, setIsPending] = React.useState(false);
+  const {mutate: signUp, isPending} = useSignUp()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,19 +62,30 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsPending(true);
 
     // TODO: Replace with actual signup mutation
     console.log("Sign up data:", data);
 
     // Simulate API call
-    setTimeout(() => {
-      setIsPending(false);
-      toast.success("Account created successfully!", {
-        position: "top-right",
-      });
-      handleSuccess?.(data.email);
-    }, 1500);
+    signUp(data, {
+        onSuccess : (response) => {
+            toast.success(response.message)
+            handleSuccess(response.data.email)
+        },
+        onError : (error)=> {
+            //if validation error
+            if(error.errors){
+                error.errors.map((err)=>{
+                    toast.error(err.message)
+                })
+            }else{
+                //other errors
+                toast.error(error.message)
+
+            }
+
+        }
+    })
   }
 
   return (

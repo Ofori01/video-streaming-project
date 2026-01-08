@@ -9,7 +9,7 @@ const MainLayout: React.FC = () => {
     <div className="relative bg-black">
       <Navbar />
       <main>
-        <Toaster />
+        <Toaster position="top-right" />
         <Outlet />
       </main>
       <Footer />
