@@ -17,15 +17,17 @@ export const LoginSchema = object({
 });
 
 
-export const SignUpBodySchema = object({
+ const SignUpBodySchema = object({
   email: string().email("Invalid email").required("Specify a valid email to sign-up"),
   username: string().required("enter a valid username"),
   password: string().required("enter your account password"),
 })
 
+export const SignUpSchema = object({
+  body: SignUpBodySchema
+})
 
-
-export const VerifyOtpBodySchema  = object({
+ const VerifyOtpBodySchema  = object({
   otp: number().min(100000, "Otp must be 6 digits").max(999999,"Otp must be 6 digits").required("Otp is required"),
   userEmail: string().email("Invalid email").required("Specify a valid email to sign-up"),
   
@@ -35,6 +37,10 @@ export const VerifyOtpSchema =  object({
   body: VerifyOtpBodySchema
 })
 
+
+
+
+export interface SignUpDto extends InferType<typeof SignUpBodySchema>{}
 export interface VerifyOtpDto extends InferType<typeof VerifyOtpBodySchema>{}
 export interface SignUpDto extends InferType<typeof SignUpBodySchema>{}
 export interface LoginDto extends InferType<typeof LoginBodySchema> {}

@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import Logo from "../assets/Logo.svg";
+import Logo from "../../assets/Logo.svg";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from "./ui/navigation-menu";
-import {  Link, NavLink, useLocation } from "react-router-dom";
+} from "../ui/navigation-menu";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Bell, Menu, Search, X } from "lucide-react";
+import {  Menu, Search, X } from "lucide-react";
+import AuthButtons from "./AuthButtons";
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -18,7 +19,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <nav className="flex flex-wrap md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
+    <nav className="inline-flex md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
       <Link
         to="/"
         className="flex flex-row items-center gap-x-3 hover:cursor-pointer"
@@ -69,12 +70,11 @@ const Navbar: React.FC = () => {
           </NavigationMenuList>
         </NavigationMenu>
       </div>
+      {/* Login/Logout */}
       {!isMobile && (
-        <div className="flex flex-row align-items-center justify-content-center gap-x-5 text-secondary ">
+        <div className="flex flex-row items-center justify-center gap-x-5 text-secondary ">
           {/* notification and search icon */}
-          <button>
-            <Bell />
-          </button>
+          <AuthButtons />
           <button>
             <Search />
           </button>

@@ -40,6 +40,8 @@ api.interceptors.response.use(
                     break
             }
         }
+
+        return Promise.reject(apiError)
     }
 )
 

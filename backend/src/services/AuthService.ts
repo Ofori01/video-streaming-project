@@ -6,17 +6,17 @@ import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError"
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import EmailService from "./EmailService";
-import { IOtpRepository } from "../interfaces/repositories/IOtpRepository";
-import { th } from "zod/v4/locales";
 import { OtpEntity } from "../entities/OtpEntity";
 import { IOtpService } from "../interfaces/services/IOtpService";
+import { IUserRolesRepository } from "../interfaces/repositories/IUserRolesRepository";
+import { USER_ROLE } from "../lib/types/common/enums";
 import { email } from "zod";
 
 export class AuthService {
   constructor(
     private _userRepository: IUserRepository,
-    private _otpService: IOtpService
+    private _otpService: IOtpService,
+    private _userRolesRepository: IUserRolesRepository
   ) {}
 
   // private generateToken(data: object) {
@@ -112,6 +112,45 @@ export class AuthService {
 
     //otp is accurate
     fetchedOtp.isActive = false;
-    await this._otpService.Update(fetchedOtp.id, fetchedOtp);
+
+    //for first time users -> after signup,
+    const user = await this._userRepository.GetOne({where: {email: userEmail}})
+    if(!user){
+      throw new CustomError("An error occurred while trying to verify otp. Try again later")
+    }
+    user.isEmailVerified = true
+
+    await Promise.all([
+       this._otpService.Update(fetchedOtp.id, fetchedOtp),
+       this._userRepository.Update(user.id, user)
+
+    ])
+  }
+
+  async signUp (username: string, password: string, email: string){
+    // check existing user
+    const existingUser = await this._userRepository.GetOne({where: {email}})
+    if(existingUser){
+      throw new CustomError("The email already exists, did you mean to log in?", 400)
+    }
+
+    // get user role
+    const userRole = await this._userRolesRepository.GetOne({where: {name: USER_ROLE.USER}})
+    //if no role -> consider
+    if(!userRole){
+      throw new CustomError("An error occurred during sign-up. Try again later")
+    }
+
+
+    const newUser  = new UserEntity()
+    newUser.email = email
+    newUser.password = bcrypt.hashSync(password)
+    newUser.username = username
+    newUser.role = userRole
+
+    await this._userRepository.Create(newUser)
+    const { otp, expiresIn } = await this.generateOtp(newUser.email);
+    this._otpService.HandleOtpDelivery(newUser.email, otp.toString(), expiresIn);
+    return {id: newUser.id, email: newUser.email}
   }
 }
