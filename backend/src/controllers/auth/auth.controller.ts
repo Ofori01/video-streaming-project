@@ -1,6 +1,6 @@
 import { AuthService } from "../../services/AuthService";
 import { NextFunction, Request, Response } from "express";
-import { LoginDto, VerifyOtpDto } from "../../interfaces/dtos/auth-dtos";
+import { LoginDto, SignUpDto, VerifyOtpDto } from "../../interfaces/dtos/auth-dtos";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 
 export class AuthController {
@@ -25,7 +25,16 @@ export class AuthController {
     }
   };
 
-  signUp = async (req: Request, res: Response, next: NextFunction) => {};
+  signUp = async (req: Request<{},{}, SignUpDto>, res: Response, next: NextFunction) => {
+    try {
+      const {id, email} = await this._authService.signUp(req.body.username, req.body.password,req.body.email)
+
+      return responseHandler.success(res,{id,email}, "Sign up successful. Verify email to continue")
+    } catch (error) {
+      return next(error)
+      
+    }
+  };
 
   verifyOtp = async (
     req: Request<{}, {}, VerifyOtpDto>,
