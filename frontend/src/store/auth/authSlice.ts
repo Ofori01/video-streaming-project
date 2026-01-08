@@ -35,6 +35,7 @@ const initialState: authState = savedAuthState ? savedAuthState : {
   userId: undefined,
 };
 
+
 const authSlice = createSlice({
   name: "auth",
   initialState,

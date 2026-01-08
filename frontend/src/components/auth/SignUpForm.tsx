@@ -3,10 +3,9 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { useLogin } from "@/hooks/mutations/useAuthMutations";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail } from "lucide-react";
+import { Eye, EyeOff, Mail, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -28,6 +28,14 @@ import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
 
 const formSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters.")
+    .max(20, "Username must be at most 20 characters.")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores."
+    ),
   email: z.email("Please enter a valid email address."),
   password: z
     .string()
@@ -35,72 +43,102 @@ const formSchema = z.object({
     .max(100, "Password must be at most 100 characters."),
 });
 
-
-interface LoginFormProps {
-  handleSuccess: (email: string)=> void
+interface SignUpFormProps {
+  handleSuccess?: (email: string) => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
-
-  const { mutate: login, isPending } = useLogin();
+  const [isPending, setIsPending] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      username: "",
       email: "",
       password: "",
     },
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    //!make a request
-    login(data, {
-      onSuccess: (response) => {
-        toast.success(response.message, {
-          position: "top-right",
-        });
-        handleSuccess(response.data.email)
-      },
-      onError: (err) => {
-        console.log(err);
-        toast.error(err.message || "Login Failed", {
-          position: "top-right",
-        });
-      },
-    });
+    setIsPending(true);
+
+    // TODO: Replace with actual signup mutation
+    console.log("Sign up data:", data);
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsPending(false);
+      toast.success("Account created successfully!", {
+        position: "top-right",
+      });
+      handleSuccess?.(data.email);
+    }, 1500);
   }
 
   return (
     <Card className="w-full sm:max-w-md">
       <CardHeader>
-        <CardTitle>You're not logged in!</CardTitle>
+        <CardTitle>Create an account</CardTitle>
         <CardDescription>
-          Sign in with your email and password to continue
+          Enter your details below to create your account
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
+        <form id="signup-form" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
+            <Controller
+              name="username"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="signup-username">Username</FieldLabel>
+                  <InputGroup>
+                    <Input
+                      {...field}
+                      id="signup-username"
+                      type="text"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Ofori"
+                      autoComplete="username"
+                      disabled={isPending}
+                    />
+                    <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
+                      <User className="size-4" />
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <FieldDescription>
+                    3-20 characters. Letters, numbers, and underscores only.
+                  </FieldDescription>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
             <Controller
               name="email"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-email">Email</FieldLabel>
+                  <FieldLabel htmlFor="signup-email">Email</FieldLabel>
                   <InputGroup>
                     <Input
                       {...field}
-                      id="form-rhf-demo-email"
+                      id="signup-email"
                       type="email"
                       aria-invalid={fieldState.invalid}
                       placeholder="email@example.com"
                       autoComplete="email"
+                      disabled={isPending}
                     />
                     <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
                       <Mail className="size-4" />
                     </InputGroupAddon>
                   </InputGroup>
+                  <FieldDescription>
+                    We'll send you a verification code to this email.
+                  </FieldDescription>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -112,17 +150,16 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-password">
-                    Password
-                  </FieldLabel>
+                  <FieldLabel htmlFor="signup-password">Password</FieldLabel>
                   <InputGroup>
                     <Input
                       {...field}
-                      id="form-rhf-demo-password"
+                      id="signup-password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="Create a strong password"
                       aria-invalid={fieldState.invalid}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
+                      disabled={isPending}
                     />
                     <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
                       <Button
@@ -134,6 +171,7 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
                         aria-label={
                           showPassword ? "Hide password" : "Show password"
                         }
+                        disabled={isPending}
                       >
                         {showPassword ? (
                           <EyeOff className="size-4" />
@@ -143,6 +181,9 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
                       </Button>
                     </InputGroupAddon>
                   </InputGroup>
+                  <FieldDescription>
+                    Must be at least 8 characters
+                  </FieldDescription>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -154,15 +195,20 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => form.reset()}
+            disabled={isPending}
+          >
             Reset
           </Button>
-          <Button type="submit" form="form-rhf-demo" disabled={isPending}>
+          <Button type="submit" form="signup-form" disabled={isPending}>
             {isPending && <Spinner />}
-            Sign In
+            Create Account
           </Button>
         </Field>
       </CardFooter>
     </Card>
   );
-}
+};

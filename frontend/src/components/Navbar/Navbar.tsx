@@ -9,7 +9,7 @@ import {
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {  Menu, Search, X } from "lucide-react";
-import LoginButton from "./LoginButton";
+import AuthButtons from "./AuthButtons";
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -74,7 +74,7 @@ const Navbar: React.FC = () => {
       {!isMobile && (
         <div className="flex flex-row items-center justify-center gap-x-5 text-secondary ">
           {/* notification and search icon */}
-          <LoginButton/>
+          <AuthButtons />
           <button>
             <Search />
           </button>

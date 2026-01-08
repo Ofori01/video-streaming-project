@@ -2,6 +2,7 @@
 export const endpoints = {
     //auth
     login: '/auth/login',
+    verifyOtp: '/auth/verify-otp',
 
     // videos
     getAllVideos: '/video',
