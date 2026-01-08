@@ -20,8 +20,8 @@ export class UserEntity extends BaseEntity {
   username: string;
 
   @Column({
-    length: 20,
     unique: true,
+    nullable: true
   })
   email: string;
 
