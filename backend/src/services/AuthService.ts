@@ -10,6 +10,7 @@ import { OtpEntity } from "../entities/OtpEntity";
 import { IOtpService } from "../interfaces/services/IOtpService";
 import { IUserRolesRepository } from "../interfaces/repositories/IUserRolesRepository";
 import { USER_ROLE } from "../lib/types/common/enums";
+import { email } from "zod";
 
 export class AuthService {
   constructor(
@@ -111,7 +112,19 @@ export class AuthService {
 
     //otp is accurate
     fetchedOtp.isActive = false;
-    await this._otpService.Update(fetchedOtp.id, fetchedOtp);
+
+    //for first time users -> after signup,
+    const user = await this._userRepository.GetOne({where: {email: userEmail}})
+    if(!user){
+      throw new CustomError("An error occurred while trying to verify otp. Try again later")
+    }
+    user.isEmailVerified = true
+
+    await Promise.all([
+       this._otpService.Update(fetchedOtp.id, fetchedOtp),
+       this._userRepository.Update(user.id, user)
+
+    ])
   }
 
   async signUp (username: string, password: string, email: string){

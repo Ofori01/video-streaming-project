@@ -35,5 +35,10 @@ export class UserEntity extends BaseEntity {
   @JoinColumn()
   profile_picture_url: FileEntity;
 
+  @Column({
+    default: false
+  })
+  isEmailVerified: boolean
+
   
 }
