@@ -6,8 +6,13 @@ interface loginResponseData {
     email: string
 }
 interface signUpResponseData {
-    id: number
-    email: string
+    user: {
+        id: number
+        email: string
+        username: string
+        role: string
+    }
+    token : string
 }
 interface VerifyOtpResponseData{
     token: string
