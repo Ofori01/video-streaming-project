@@ -12,6 +12,13 @@ import { IUserRolesRepository } from "../interfaces/repositories/IUserRolesRepos
 import { USER_ROLE } from "../lib/types/common/enums";
 import { email } from "zod";
 
+interface tokenPayload {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+}
+
 export class AuthService {
   constructor(
     private _userRepository: IUserRepository,
@@ -19,20 +26,20 @@ export class AuthService {
     private _userRolesRepository: IUserRolesRepository
   ) {}
 
-  // private generateToken(data: object) {
-  //   return jwt.sign(data, envConfig.JWT_SECRET, { expiresIn: "30d" });
-  // }
+  private generateToken(data: tokenPayload) {
+    return jwt.sign(data, envConfig.JWT_SECRET, { expiresIn: "30d" });
+  }
 
   async generateUserToken(userEmail: string) {
     const user = await this._userRepository.GetOne({
       where: { email: userEmail },
-      relations: {role: true},
+      relations: { role: true },
       select: {
         role: {
           id: true,
           name: true,
-        }
-      }
+        },
+      },
     });
     if (!user) {
       throw new NotFoundError("User not found");
@@ -41,10 +48,10 @@ export class AuthService {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: user.role?.name ??  'user'
+      role: user.role?.name ?? "user",
     };
-    const token =  jwt.sign(payload,envConfig.JWT_SECRET, {expiresIn: "2d"})
-    return {token , user: payload}
+    const token = jwt.sign(payload, envConfig.JWT_SECRET, { expiresIn: "2d" });
+    return { token, user: payload };
   }
 
   private async generateOtp(userEmail: string) {
@@ -97,7 +104,6 @@ export class AuthService {
     return { user: { id: user.id, email: user.email } };
   }
 
-  // Todo -
   async VerifyOtp(otp: number, userEmail: string) {
     const fetchedOtp = await this._otpService.GetOne({
       where: { otp: otp, userEmail, isActive: true },
@@ -114,43 +120,68 @@ export class AuthService {
     fetchedOtp.isActive = false;
 
     //for first time users -> after signup,
-    const user = await this._userRepository.GetOne({where: {email: userEmail}})
-    if(!user){
-      throw new CustomError("An error occurred while trying to verify otp. Try again later")
+    const user = await this._userRepository.GetOne({
+      where: { email: userEmail },
+    });
+    if (!user) {
+      throw new CustomError(
+        "An error occurred while trying to verify otp. Try again later"
+      );
     }
-    user.isEmailVerified = true
+    user.isEmailVerified = true;
 
     await Promise.all([
-       this._otpService.Update(fetchedOtp.id, fetchedOtp),
-       this._userRepository.Update(user.id, user)
-
-    ])
+      this._otpService.Update(fetchedOtp.id, fetchedOtp),
+      this._userRepository.Update(user.id, user),
+    ]);
   }
 
-  async signUp (username: string, password: string, email: string){
+  async signUp(username: string, password: string, email: string) {
     // check existing user
-    const existingUser = await this._userRepository.GetOne({where: {email}})
-    if(existingUser){
-      throw new CustomError("The email already exists, did you mean to log in?", 400)
+    const existingUser = await this._userRepository.GetOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new CustomError(
+        "The email already exists, did you mean to log in?",
+        400
+      );
     }
 
     // get user role
-    const userRole = await this._userRolesRepository.GetOne({where: {name: USER_ROLE.USER}})
+    const userRole = await this._userRolesRepository.GetOne({
+      where: { name: USER_ROLE.USER },
+    });
     //if no role -> consider
-    if(!userRole){
-      throw new CustomError("An error occurred during sign-up. Try again later")
+    if (!userRole) {
+      throw new CustomError(
+        "An error occurred during sign-up. Try again later"
+      );
     }
 
+    const newUser = new UserEntity();
+    newUser.email = email;
+    newUser.password = bcrypt.hashSync(password);
+    newUser.username = username;
+    newUser.role = userRole;
 
-    const newUser  = new UserEntity()
-    newUser.email = email
-    newUser.password = bcrypt.hashSync(password)
-    newUser.username = username
-    newUser.role = userRole
+    await this._userRepository.Create(newUser);
 
-    await this._userRepository.Create(newUser)
-    const { otp, expiresIn } = await this.generateOtp(newUser.email);
-    this._otpService.HandleOtpDelivery(newUser.email, otp.toString(), expiresIn);
-    return {id: newUser.id, email: newUser.email}
+    const token = this.generateToken({
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role.name,
+      email: newUser.email,
+    });
+    // Todo: send welcome message
+    return {
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        role: newUser.role.name,
+      },
+      token,
+    };
   }
 }
