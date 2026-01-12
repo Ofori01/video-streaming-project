@@ -45,7 +45,7 @@ const formSchema = z.object({
 });
 
 interface SignUpFormProps {
-  handleSuccess: (email: string) => void;
+  handleSuccess: () => void;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
@@ -70,7 +70,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
     signUp(data, {
         onSuccess : (response) => {
             toast.success(response.message)
-            handleSuccess(response.data.email)
+            handleSuccess()
         },
         onError : (error)=> {
             //if validation error
