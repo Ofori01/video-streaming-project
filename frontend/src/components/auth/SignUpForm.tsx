@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, User } from "lucide-react";
 
@@ -27,21 +26,23 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
 import { useSignUp } from "@/hooks/mutations/useAuthMutations";
-import  {  useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
 
-const formSchema = z.object({
-  username: z
-    .string()
+const formSchema = Yup.object().shape({
+  username: Yup.string()
+    .required("Username is required.")
     .min(3, "Username must be at least 3 characters.")
     .max(20, "Username must be at most 20 characters.")
-    .regex(
+    .matches(
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores."
     ),
-  email: z.email("Please enter a valid email address."),
-  password: z
-    .string()
+  email: Yup.string()
+    .required("Email is required.")
+    .email("Please enter a valid email address."),
+  password: Yup.string()
+    .required("Password is required.")
     .min(8, "Password must be at least 8 characters.")
     .max(100, "Password must be at most 100 characters."),
 });
@@ -52,51 +53,52 @@ interface SignUpFormProps {
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
-  const {mutate: signUp, isPending} = useSignUp()
-  const dispatch  = useDispatch()
+  const { mutate: signUp, isPending } = useSignUp();
+  const dispatch = useDispatch();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const form = useFormik({
+    initialValues: {
       username: "",
       email: "",
       password: "",
     },
+    validationSchema: formSchema,
+    onSubmit: onSubmit,
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-
-    // TODO: Replace with actual signup mutation
+  function onSubmit(data: Yup.InferType<typeof formSchema>) {
     console.log("Sign up data:", data);
 
-    // Simulate API call
+    //  API call
     signUp(data, {
-        onSuccess : (response) => {
-            toast.success(response.message)
-            //set credentials
-            dispatch(setCredentials({
-              token: response.data.token,
-              userId: response.data.user.id,
-              role: response.data.user.role
-
-            }))
-            handleSuccess()
-        },
-        onError : (error)=> {
-            //if validation error
-            if(error.errors){
-                error.errors.map((err)=>{
-                    toast.error(err.message)
-                })
-            }else{
-                //other errors
-                toast.error(error.message)
-
-            }
-
+      onSuccess: (response) => {
+        toast.success(response.message);
+        //set credentials
+        dispatch(
+          setCredentials({
+            token: response.data.token,
+            userId: response.data.user.id,
+            role: response.data.user.role,
+          })
+        );
+        handleSuccess();
+      },
+      onError: (error) => {
+        //if validation error
+        if (error.errors) {
+          error.errors.map((err) => {
+            toast.error(err.message);
+          });
+        } else {
+          //other errors
+          toast.error(error.message);
         }
-    })
+      },
+    });
   }
+
+  const { handleSubmit, touched, errors, handleChange, handleBlur, values } =
+    form;
 
   return (
     <Card className="w-full sm:max-w-md">
@@ -107,111 +109,100 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="signup-form" onSubmit={form.handleSubmit(onSubmit)}>
+        <form id="signup-form" onSubmit={handleSubmit}>
           <FieldGroup>
-            <Controller
-              name="username"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="signup-username">Username</FieldLabel>
-                  <InputGroup>
-                    <Input
-                      {...field}
-                      id="signup-username"
-                      type="text"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Ofori"
-                      autoComplete="username"
-                      disabled={isPending}
-                    />
-                    <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
-                      <User className="size-4" />
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <FieldDescription>
-                    3-20 characters. Letters, numbers, and underscores only.
-                  </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
+            <Field data-invalid={touched.username && !!errors.username}>
+              <FieldLabel htmlFor="signup-username">Username</FieldLabel>
+              <InputGroup>
+                <Input
+                  id="signup-username"
+                  type="text"
+                  name="username"
+                  aria-invalid={touched.username && !!errors.username}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  value={values.username}
+                  placeholder="user"
+                  autoComplete="username"
+                  disabled={isPending}
+                />
+                <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
+                  <User className="size-4" />
+                </InputGroupAddon>
+              </InputGroup>
+              <FieldDescription>
+                3-20 characters. Letters, numbers, and underscores only.
+              </FieldDescription>
+              {touched.username && !!errors.username && (
+                <FieldError errors={[{ message: errors.username }]} />
               )}
-            />
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="signup-email">Email</FieldLabel>
-                  <InputGroup>
-                    <Input
-                      {...field}
-                      id="signup-email"
-                      type="email"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="email@example.com"
-                      autoComplete="email"
-                      disabled={isPending}
-                    />
-                    <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
-                      <Mail className="size-4" />
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <FieldDescription>
-                    We'll send you a verification code to this email.
-                  </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
+            </Field>
+            <Field data-invalid={touched.email && !!errors.email}>
+              <FieldLabel htmlFor="signup-email">Email</FieldLabel>
+              <InputGroup>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  name="email"
+                  aria-invalid={touched.email && !!errors.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  value={values.email}
+                  placeholder="email@example.com"
+                  autoComplete="email"
+                  disabled={isPending}
+                />
+                <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
+                  <Mail className="size-4" />
+                </InputGroupAddon>
+              </InputGroup>
+              <FieldDescription>
+                We'll send you a verification code to this email.
+              </FieldDescription>
+              {touched.email && !!errors.email && (
+                <FieldError errors={[{ message: errors.email }]} />
               )}
-            />
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="signup-password">Password</FieldLabel>
-                  <InputGroup>
-                    <Input
-                      {...field}
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a strong password"
-                      aria-invalid={fieldState.invalid}
-                      autoComplete="new-password"
-                      disabled={isPending}
-                    />
-                    <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        disabled={isPending}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </Button>
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <FieldDescription>
-                    Must be at least 8 characters
-                  </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
+            </Field>
+            <Field data-invalid={touched.password && !!errors.password}>
+              <FieldLabel htmlFor="signup-password">Password</FieldLabel>
+              <InputGroup>
+                <Input
+                  id="signup-password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  aria-invalid={touched.password && !!errors.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  value={values.password}
+                  autoComplete="new-password"
+                  disabled={isPending}
+                />
+                <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    disabled={isPending}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </Button>
+                </InputGroupAddon>
+              </InputGroup>
+              <FieldDescription>Must be at least 8 characters</FieldDescription>
+              {touched.password && !!errors.password && (
+                <FieldError errors={[{ message: errors.password }]} />
               )}
-            />
+            </Field>
           </FieldGroup>
         </form>
       </CardContent>
@@ -220,7 +211,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => form.reset()}
+            onClick={() => form.resetForm()}
             disabled={isPending}
           >
             Reset
