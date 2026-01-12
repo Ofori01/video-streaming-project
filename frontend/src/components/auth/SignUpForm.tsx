@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
 import { useSignUp } from "@/hooks/mutations/useAuthMutations";
+import  {  useDispatch } from "react-redux";
+import { setCredentials } from "@/store/auth/authSlice";
 
 const formSchema = z.object({
   username: z
@@ -51,6 +53,7 @@ interface SignUpFormProps {
 export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
   const {mutate: signUp, isPending} = useSignUp()
+  const dispatch  = useDispatch()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,6 +73,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
     signUp(data, {
         onSuccess : (response) => {
             toast.success(response.message)
+            //set credentials
+            dispatch(setCredentials({
+              token: response.data.token,
+              userId: response.data.user.id,
+              role: response.data.user.role
+
+            }))
             handleSuccess()
         },
         onError : (error)=> {

@@ -27,9 +27,9 @@ export class AuthController {
 
   signUp = async (req: Request<{},{}, SignUpDto>, res: Response, next: NextFunction) => {
     try {
-      const {id, email} = await this._authService.signUp(req.body.username, req.body.password,req.body.email)
+      const {user, token} = await this._authService.signUp(req.body.username, req.body.password,req.body.email)
 
-      return responseHandler.success(res,{id,email}, "Sign up successful. Verify email to continue")
+      return responseHandler.success(res,{user, token}, "Sign up successful")
     } catch (error) {
       return next(error)
       
