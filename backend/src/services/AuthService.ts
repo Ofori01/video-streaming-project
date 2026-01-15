@@ -128,12 +128,10 @@ export class AuthService {
         "An error occurred while trying to verify otp. Try again later"
       );
     }
-    user.isEmailVerified = true;
+    
 
-    await Promise.all([
-      this._otpService.Update(fetchedOtp.id, fetchedOtp),
-      this._userRepository.Update(user.id, user),
-    ]);
+    await this._otpService.Update(fetchedOtp.id, fetchedOtp)
+    
   }
 
   async signUp(username: string, password: string, email: string) {

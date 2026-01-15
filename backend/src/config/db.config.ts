@@ -7,12 +7,12 @@ export const AppDataSource = new DataSource({
   port: 5432,
   username: "postgres",
   password: "password123",
-  database: "test",
-  synchronize: true,
+  database: "video_streaming",
+  synchronize: false,
   logging: false,
   entities: [path.join(__dirname, "../entities/**/*.{ts,js}")],
   subscribers: [],
-  migrations: [],
+  migrations: [path.join(__dirname, "../migrations/**/*.{ts,js}")],
 });
 
 export const initializeDb = async () => {
