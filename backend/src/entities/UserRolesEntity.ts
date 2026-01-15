@@ -14,7 +14,7 @@ export class UserRolesEntity extends BaseEntity {
 
   @Column({
     type: "varchar",
-    length: "30",
+    length: "150",
   })
   description: string;
 

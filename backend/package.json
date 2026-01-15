@@ -10,7 +10,8 @@
     "build": "tsc --build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "migration:create": "npx typeorm migration:create src/migrations/$npm_config_name"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.953.0",
