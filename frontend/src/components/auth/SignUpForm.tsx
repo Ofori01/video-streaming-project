@@ -45,6 +45,9 @@ const formSchema = Yup.object().shape({
     .required("Password is required.")
     .min(8, "Password must be at least 8 characters.")
     .max(100, "Password must be at most 100 characters."),
+  confirmPassword: Yup.string()
+    .required("Please confirm your password.")
+    .oneOf([Yup.ref("password")], "Passwords must match."),
 });
 
 interface SignUpFormProps {
@@ -61,6 +64,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
     validationSchema: formSchema,
     onSubmit: onSubmit,
@@ -201,6 +205,54 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
               <FieldDescription>Must be at least 8 characters</FieldDescription>
               {touched.password && !!errors.password && (
                 <FieldError errors={[{ message: errors.password }]} />
+              )}
+            </Field>
+            <Field
+              data-invalid={touched.confirmPassword && !!errors.confirmPassword}
+            >
+              <FieldLabel htmlFor="signup-confirm-password">
+                Confirm Password
+              </FieldLabel>
+              <InputGroup>
+                <Input
+                  id="signup-confirm-password"
+                  name="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  aria-invalid={
+                    touched.confirmPassword && !!errors.confirmPassword
+                  }
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  value={values.confirmPassword}
+                  autoComplete="new-password"
+                  disabled={isPending}
+                />
+                <InputGroupAddon className="w-10 pr-2 flex items-center justify-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    disabled={isPending}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </Button>
+                </InputGroupAddon>
+              </InputGroup>
+              <FieldDescription>
+                Re-enter your password to confirm.
+              </FieldDescription>
+              {touched.confirmPassword && !!errors.confirmPassword && (
+                <FieldError errors={[{ message: errors.confirmPassword }]} />
               )}
             </Field>
           </FieldGroup>
