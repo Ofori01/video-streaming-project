@@ -1,12 +1,14 @@
 import { AuthService } from "../../services/AuthService";
 import { NextFunction, Request, Response } from "express";
-import { LoginDto, SignUpDto, VerifyOtpDto } from "../../interfaces/dtos/auth-dtos";
+import {
+  LoginDto,
+  SignUpDto,
+  VerifyOtpDto,
+} from "../../interfaces/dtos/auth-dtos";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 
 export class AuthController {
-  constructor(
-    private _authService: AuthService,
-  ) {}
+  constructor(private _authService: AuthService) {}
 
   login = async (
     req: Request<{}, {}, LoginDto>,
@@ -25,14 +27,26 @@ export class AuthController {
     }
   };
 
-  signUp = async (req: Request<{},{}, SignUpDto>, res: Response, next: NextFunction) => {
+  signUp = async (
+    req: Request<{}, {}, SignUpDto>,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const {user, token} = await this._authService.signUp(req.body.username, req.body.password,req.body.email)
+      const { user, token } = await this._authService.signUp(
+        req.body.username,
+        req.body.password,
+        req.body.email,
+        req.body.roleId
+      );
 
-      return responseHandler.success(res,{user, token}, "Sign up successful")
+      return responseHandler.success(
+        res,
+        { user, token },
+        "Sign up successful"
+      );
     } catch (error) {
-      return next(error)
-      
+      return next(error);
     }
   };
 
@@ -44,10 +58,24 @@ export class AuthController {
     try {
       await this._authService.VerifyOtp(req.body.otp, req.body.userEmail);
 
-      
-      const {token, user}  = await this._authService.generateUserToken(req.body.userEmail)
+      const { token, user } = await this._authService.generateUserToken(
+        req.body.userEmail
+      );
 
-      return responseHandler.success(res, {token, user},"Login successful")
+      return responseHandler.success(res, { token, user }, "Login successful");
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  availableRoles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const roles = await this._authService.getAvailableRoles();
+      return responseHandler.success(
+        res,
+        roles,
+        "Roles retrieved successfully"
+      );
     } catch (error) {
       return next(error);
     }

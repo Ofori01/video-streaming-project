@@ -134,7 +134,7 @@ export class AuthService {
     
   }
 
-  async signUp(username: string, password: string, email: string) {
+  async signUp(username: string, password: string, email: string, roleId?: string) {
     // check existing user
     const existingUser = await this._userRepository.GetOne({
       where: { email },
@@ -146,16 +146,22 @@ export class AuthService {
       );
     }
 
-    // get user role
-    const userRole = await this._userRolesRepository.GetOne({
-      where: { name: USER_ROLE.USER },
-    });
-    //if no role -> consider
-    if (!userRole) {
-      throw new CustomError(
-        "An error occurred during sign-up. Try again later"
-      );
+    // default role to user
+    let userRole
+    if(!roleId){
+      userRole = await this._userRolesRepository.GetOne({
+        where: { name: USER_ROLE.USER },
+      });
+      //if no role -> consider
+      if (!userRole) {
+        throw new CustomError(
+          "An error occurred during sign-up. Try again later"
+        );
+      }
     }
+    userRole = await this._userRolesRepository.GetById(Number(roleId))
+
+
 
     const newUser = new UserEntity();
     newUser.email = email;
@@ -181,5 +187,15 @@ export class AuthService {
       },
       token,
     };
+  }
+
+
+  async getAvailableRoles(){
+    const roles = await this._userRolesRepository.GetAll({select: {
+      id: true,
+      name: true
+    }})
+    
+    return roles
   }
 }
