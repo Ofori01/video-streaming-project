@@ -158,8 +158,9 @@ export class AuthService {
           "An error occurred during sign-up. Try again later"
         );
       }
+    }else {
+      userRole = await this._userRolesRepository.GetById(Number(roleId))
     }
-    userRole = await this._userRolesRepository.GetById(Number(roleId))
 
 
 
