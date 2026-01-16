@@ -6,6 +6,7 @@ import Movies from './pages/Movies'
 import Movie from './pages/Movie'
 import AdminLayout from './layouts/AdminLayout'
 import Dashboard from './pages/admin/Dashboard'
+import MovieCreate from './pages/admin/MovieCreate'
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
       {/* admin routes */}
       <Route path='/admin/*' element={<AdminLayout />}>
         <Route index element ={<Dashboard />} />
+        <Route path='movies/add' element={<MovieCreate/>} />
 
       </Route>
       {/* user routes */}
