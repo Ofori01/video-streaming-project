@@ -24,8 +24,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "../ui/spinner";
 import { useSignUp } from "@/hooks/mutations/useAuthMutations";
+import { useGetAvailableRoles } from "@/hooks/queries/useAuthQuerries";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
 
@@ -48,6 +56,7 @@ const formSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .required("Please confirm your password.")
     .oneOf([Yup.ref("password")], "Passwords must match."),
+  role: Yup.string().required("Please select a role."),
 });
 
 interface SignUpFormProps {
@@ -57,7 +66,9 @@ interface SignUpFormProps {
 export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
   const { mutate: signUp, isPending } = useSignUp();
+  const { data: rolesData, isLoading: isLoadingRoles } = useGetAvailableRoles();
   const dispatch = useDispatch();
+  console.log(rolesData);
 
   const form = useFormik({
     initialValues: {
@@ -65,6 +76,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "",
     },
     validationSchema: formSchema,
     onSubmit: onSubmit,
@@ -253,6 +265,46 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
               </FieldDescription>
               {touched.confirmPassword && !!errors.confirmPassword && (
                 <FieldError errors={[{ message: errors.confirmPassword }]} />
+              )}
+            </Field>
+            <Field data-invalid={touched.role && !!errors.role}>
+              <FieldLabel htmlFor="signup-role">Role</FieldLabel>
+              <Select
+                name="role"
+                value={values.role || undefined}
+                onValueChange={(value) => form.setFieldValue("role", value)}
+                disabled={isPending || isLoadingRoles}
+              >
+                <SelectTrigger id="signup-role" className="w-full">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  className="z-999"
+                  sideOffset={4}
+                >
+                  {isLoadingRoles ? (
+                    <SelectItem value="loading" disabled>
+                      Loading roles...
+                    </SelectItem>
+                  ) : rolesData?.data && rolesData.data.length > 0 ? (
+                    rolesData.data.map((role) => (
+                      <SelectItem key={role.id} value={String(role.id)}>
+                        {role.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-roles" disabled>
+                      No roles available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                Choose the role that best fits your needs.
+              </FieldDescription>
+              {touched.role && !!errors.role && (
+                <FieldError errors={[{ message: errors.role }]} />
               )}
             </Field>
           </FieldGroup>

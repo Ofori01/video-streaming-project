@@ -1,4 +1,4 @@
-import type { LoginDto, SignUpDto, VerifyOtpDto } from "@/types/dtos/auth"
+import type { AvailableRolesDto, LoginDto, SignUpDto, VerifyOtpDto } from "@/types/dtos/auth"
 import backendService from "./api.service"
 import { endpoints } from "./constants"
 
@@ -17,8 +17,13 @@ class AuthService {
       
    }
 
-   async signUp(email:string, username: string, password: string){
-      const response = await backendService.post<SignUpDto>(endpoints.signUp, {email, password,username})
+   async signUp(email:string, username: string, password: string, role?: string){
+      const response = await backendService.post<SignUpDto>(endpoints.signUp, {email, password,username, roleId: role})
+      return response.data
+   }
+
+   async getAvailableRoles(){
+      const response = await backendService.get<AvailableRolesDto>(endpoints.availableRoles)
       return response.data
    }
 }

@@ -4,6 +4,7 @@ export const endpoints = {
     login: '/auth/login',
     verifyOtp: '/auth/verify-otp',
     signUp: '/auth/sign-up',
+    availableRoles: 'auth/roles',
 
     // videos
     getAllVideos: '/video',
