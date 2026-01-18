@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { Formik, Form, type FormikHelpers } from "formik";
 import * as Yup from "yup";
-import { Upload, X, Film, Image as ImageIcon } from "lucide-react";
+import {
+  Upload,
+  X,
+  Film,
+  Image as ImageIcon,
+  CheckCircle2,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -22,6 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Field, FieldGroup } from "@/components/ui/field";
+import { useCreateVideo } from "@/hooks/mutations/useVideoMutations";
+import { useGetAllVideoCategories } from "@/hooks/queries/useVideoQuerries";
+import { toast } from "sonner";
+import type { ApiErrorResponse } from "@/types/errors";
 
 interface MovieFormValues {
   title: string;
@@ -29,11 +38,6 @@ interface MovieFormValues {
   category: string;
   video: File | null;
   thumbnail: File | null;
-}
-
-interface UploadProgress {
-  video: number;
-  thumbnail: number;
 }
 
 const validationSchema = Yup.object({
@@ -55,7 +59,7 @@ const validationSchema = Yup.object({
       return (
         value &&
         ["video/mp4", "video/webm", "video/ogg", "video/quicktime"].includes(
-          (value as File).type
+          (value as File).type,
         )
       );
     }),
@@ -68,28 +72,18 @@ const validationSchema = Yup.object({
       return (
         value &&
         ["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(
-          (value as File).type
+          (value as File).type,
         )
       );
     }),
 });
 
 const MovieCreate: React.FC = () => {
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
-    video: 0,
-    thumbnail: 0,
-  });
+  const createVideoMutation = useCreateVideo();
+  const { data: categories = [], isLoading: isCategoriesLoading } =
+    useGetAllVideoCategories();
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-
-  // Mock categories - these would come from backend
-  const categories = [
-    { id: "1", name: "Action" },
-    { id: "2", name: "Comedy" },
-    { id: "3", name: "Drama" },
-    { id: "4", name: "Horror" },
-    { id: "5", name: "Sci-Fi" },
-  ];
 
   const initialValues: MovieFormValues = {
     title: "",
@@ -101,7 +95,7 @@ const MovieCreate: React.FC = () => {
 
   const handleVideoChange = (
     event: React.ChangeEvent<HTMLInputElement>,
-    setFieldValue: (field: string, value: unknown) => void
+    setFieldValue: (field: string, value: unknown) => void,
   ) => {
     const file = event.currentTarget.files?.[0];
     if (file) {
@@ -113,7 +107,7 @@ const MovieCreate: React.FC = () => {
 
   const handleThumbnailChange = (
     event: React.ChangeEvent<HTMLInputElement>,
-    setFieldValue: (field: string, value: unknown) => void
+    setFieldValue: (field: string, value: unknown) => void,
   ) => {
     const file = event.currentTarget.files?.[0];
     if (file) {
@@ -127,30 +121,27 @@ const MovieCreate: React.FC = () => {
   };
 
   const clearVideo = (
-    setFieldValue: (field: string, value: unknown) => void
+    setFieldValue: (field: string, value: unknown) => void,
   ) => {
     setFieldValue("video", null);
     if (videoPreview) {
       URL.revokeObjectURL(videoPreview);
       setVideoPreview(null);
     }
-    setUploadProgress((prev) => ({ ...prev, video: 0 }));
   };
 
   const clearThumbnail = (
-    setFieldValue: (field: string, value: unknown) => void
+    setFieldValue: (field: string, value: unknown) => void,
   ) => {
     setFieldValue("thumbnail", null);
     setThumbnailPreview(null);
-    setUploadProgress((prev) => ({ ...prev, thumbnail: 0 }));
   };
 
   const handleSubmit = async (
     values: MovieFormValues,
-    { setSubmitting, resetForm }: FormikHelpers<MovieFormValues>
+    { setSubmitting, resetForm }: FormikHelpers<MovieFormValues>,
   ) => {
     try {
-      // Create FormData for multipart upload
       const formData = new FormData();
       formData.append("title", values.title);
       formData.append("description", values.description);
@@ -158,32 +149,41 @@ const MovieCreate: React.FC = () => {
       if (values.video) formData.append("video", values.video);
       if (values.thumbnail) formData.append("thumbnail", values.thumbnail);
 
-      // TODO: Replace with actual API call
-      // Simulate upload progress
-      const simulateUpload = () => {
-        return new Promise((resolve) => {
-          let progress = 0;
-          const interval = setInterval(() => {
-            progress += 10;
-            setUploadProgress({ video: progress, thumbnail: progress });
-            if (progress >= 100) {
-              clearInterval(interval);
-              resolve(true);
-            }
-          }, 300);
-        });
-      };
+      await createVideoMutation.mutateAsync(formData);
 
-      await simulateUpload();
+      toast.success("Movie uploaded successfully!", {
+        description: `"${values.title}" has been uploaded and is now available.`,
+        icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+      });
 
-      console.log("Form submitted:", values);
       // Reset form after successful upload
-      resetForm();
-      setVideoPreview(null);
-      setThumbnailPreview(null);
-      setUploadProgress({ video: 0, thumbnail: 0 });
+      setTimeout(() => {
+        resetForm();
+        setVideoPreview(null);
+        setThumbnailPreview(null);
+      }, 1000);
     } catch (error) {
       console.error("Upload failed:", error);
+
+      // Type guard to check if error is ApiErrorResponse
+      const apiError = error as ApiErrorResponse;
+
+      // Extract error message
+      const errorMessage =
+        apiError?.message ||
+        "There was an error uploading your movie. Please try again.";
+
+      // Extract field-specific errors if available
+      const fieldErrors = apiError?.errors
+        ? apiError.errors
+            .map((err) => `${err.field}: ${err.message}`)
+            .join(", ")
+        : null;
+
+      // Show error message
+      toast.error("Upload failed", {
+        description: fieldErrors || errorMessage,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -252,11 +252,24 @@ const MovieCreate: React.FC = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
+                          {isCategoriesLoading ? (
+                            <SelectItem value="loading" disabled>
+                              Loading categories...
                             </SelectItem>
-                          ))}
+                          ) : categories.length === 0 ? (
+                            <SelectItem value="no-categories" disabled>
+                              No categories available
+                            </SelectItem>
+                          ) : (
+                            categories.map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.id.toString()}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       {touched.category && errors.category && (
@@ -348,21 +361,6 @@ const MovieCreate: React.FC = () => {
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
-                        {uploadProgress.video > 0 &&
-                          uploadProgress.video < 100 && (
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Uploading...</span>
-                                <span className="text-destructive font-medium">
-                                  {uploadProgress.video}%
-                                </span>
-                              </div>
-                              <Progress
-                                value={uploadProgress.video}
-                                className="h-2"
-                              />
-                            </div>
-                          )}
                       </div>
                     )}
                     {touched.video && errors.video && (
@@ -434,21 +432,6 @@ const MovieCreate: React.FC = () => {
                             {(values.thumbnail.size / 1024).toFixed(2)} KB)
                           </p>
                         </div>
-                        {uploadProgress.thumbnail > 0 &&
-                          uploadProgress.thumbnail < 100 && (
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Uploading...</span>
-                                <span className="text-destructive font-medium">
-                                  {uploadProgress.thumbnail}%
-                                </span>
-                              </div>
-                              <Progress
-                                value={uploadProgress.thumbnail}
-                                className="h-2"
-                              />
-                            </div>
-                          )}
                       </div>
                     )}
                     {touched.thumbnail && errors.thumbnail && (
