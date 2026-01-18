@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 
 const MainLayout: React.FC = () => {
   return (
-    <div className="relative bg-black">
+    <div className="relative bg-black scroll-smooth">
       <Navbar />
       <main>
         <Toaster position="top-right" />
