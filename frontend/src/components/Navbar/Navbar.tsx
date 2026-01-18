@@ -8,7 +8,7 @@ import {
 } from "../ui/navigation-menu";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {  Menu, Search, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import AuthButtons from "./AuthButtons";
 
 const Navbar: React.FC = () => {
@@ -21,6 +21,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="inline-flex md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
       <Link
+        viewTransition={true}
         to="/"
         className="flex flex-row items-center gap-x-3 hover:cursor-pointer"
       >
@@ -59,6 +60,7 @@ const Navbar: React.FC = () => {
                   data-active={location.pathname === navItem.href}
                 >
                   <NavLink
+                    viewTransition={true}
                     to={navItem.href}
                     onClick={() => isMobile && setIsMenuOpen(false)}
                   >
