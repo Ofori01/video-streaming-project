@@ -8,7 +8,9 @@ export const endpoints = {
 
     // videos
     getAllVideos: '/video',
-    getVideo: (videoId: number) => `/videos/${videoId}`
+    getVideo: (videoId: number) => `/videos/${videoId}`,
+    createVideo: "/video",
+    getAllCategories: "/category"
 
 }
 

@@ -1,6 +1,6 @@
 import videoService from "@/backend/video.service";
 import type { ApiErrorResponse } from "@/types/errors";
-import type { IVideo } from "@/types/Videos";
+import type { ICategory, IVideo } from "@/types/Videos";
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
 interface VideoFilters {
@@ -16,6 +16,7 @@ const videoKeys = {
     [...videoKeys.lists(), { filters }] as const,
   details: () => [...videoKeys.all, "detail"] as const,
   detail: (id: number) => [...videoKeys.details(), id] as const,
+  categories : () => [...videoKeys.all, "categories"] as const
 };
 
 export const useGetAllVideos = (
@@ -31,3 +32,11 @@ export const useGetAllVideos = (
     ...options,
   });
 };
+
+
+export const useGetAllVideoCategories = () => {
+  return useQuery<ICategory[], ApiErrorResponse>({
+    queryKey: videoKeys.categories(),
+    queryFn: () =>  videoService.getAllVideoCategories()
+  })
+}
