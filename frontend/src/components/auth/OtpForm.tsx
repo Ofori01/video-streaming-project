@@ -22,6 +22,8 @@ import { useVerifyOtp } from "@/hooks/mutations/useAuthMutations";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
+import { USER_ROLE } from "@/types/User";
+import { useNavigate } from "react-router-dom";
 
 interface OtpFormProps {
   email: string;
@@ -31,6 +33,7 @@ interface OtpFormProps {
 export function OtpForm({ email }: OtpFormProps) {
     const dispatch = useDispatch()
   const [otp, setOtp] = React.useState("");
+  const navigate = useNavigate()
 
   const {mutate: verifyOtp, isPending} = useVerifyOtp()
 
@@ -44,6 +47,10 @@ export function OtpForm({ email }: OtpFormProps) {
                 role: response.data.user.role,
                 
             }))
+            // check role and navigate user
+            if(response.data.user.role === USER_ROLE.ADMIN){
+              navigate("/admin",{replace: true, viewTransition: true})
+            }
         },
         onError: (err)=> {
             toast.error(err.message)
