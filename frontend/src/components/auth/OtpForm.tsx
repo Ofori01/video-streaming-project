@@ -47,6 +47,8 @@ export function OtpForm({ email }: OtpFormProps) {
               token: response.data.token,
               userId: response.data.user.id,
               role: response.data.user.role,
+              email: response.data.user.email,
+              username: response.data.user.username
             }),
           );
           // check role and navigate user
