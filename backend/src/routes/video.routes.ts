@@ -8,6 +8,7 @@ import { fileHandler } from "../middlewares/fileHandler/fileHandler";
 import { validate } from "../middlewares/validation/validation";
 import {
   CreateVideoSchema,
+  GetAllVideosValidationSchema,
   GetVideoSchema,
 } from "../interfaces/dtos/video-dtos";
 import S3StorageService from "../services/StorageService";
@@ -19,7 +20,6 @@ const s3Service = new S3StorageService();
 const videoService = new VideoService(videoRepository, s3Service);
 const videoController = new VideoController(videoService);
 
-videoRoutes.use(authMiddleware.authenticate);
 /**
  * @swagger
  * /video:
@@ -53,6 +53,7 @@ videoRoutes.use(authMiddleware.authenticate);
  */
 videoRoutes.post(
   "",
+  authMiddleware.authenticate,
   authMiddleware.authorize(USER_ROLE.ADMIN),
   fileHandler,
   validate(CreateVideoSchema),
@@ -79,7 +80,7 @@ videoRoutes.post(
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-videoRoutes.get("", videoController.GetAllVideos);
+videoRoutes.get("", validate(GetAllVideosValidationSchema), videoController.GetAllVideos);
 
 /**
  * @swagger
