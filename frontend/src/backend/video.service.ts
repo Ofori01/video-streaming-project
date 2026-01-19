@@ -2,13 +2,16 @@ import type { IVideo } from "@/types/Videos";
 import backendService from "./api.service";
 import { endpoints } from "./constants";
 import type { GetAllVideoCategories, GetAllVideosDto, GetVideoDto } from "@/types/dtos/videos";
+import type { VideoFilters } from "@/hooks/queries/useVideoQuerries";
 
 // get all videos
 
 class VideoService {
-  async getAllVideos(): Promise<IVideo[]> {
+  async getAllVideos(filters?: VideoFilters): Promise<IVideo[]> {
     const response = await backendService.get<GetAllVideosDto>(
-      endpoints.getAllVideos
+      endpoints.getAllVideos, {
+        params: filters
+      }
     );
     return response.data.data;
   }
