@@ -71,23 +71,23 @@ export class VideoController {
               processingStatus: UPLOAD_STATUS.COMPLETED,
             }
           : {};
-      if(req.query.adminVideos && req.user?.role== USER_ROLE.ADMIN){
+      if (req.query.adminVideos && req.user?.role == USER_ROLE.ADMIN) {
         userFilter.uploadedBy = {
-          id: req.user?.id
-        }
+          id: req.user?.id,
+        };
       }
-      const categoryFilter: FindOptionsWhere<VideoEntity> = req.query.categoryId? {
-        category: {
-          id: Number(req.query.categoryId)
-        },
-      }: {}
+      const categoryFilter: FindOptionsWhere<VideoEntity> = req.query.categoryId
+        ? {
+            category: {
+              id: Number(req.query.categoryId),
+            },
+          }
+        : {};
 
-      console.log(req.query.adminVideos, typeof req.query.adminVideos)
-      
       const videos = await this._videoService.GetAll({
         where: {
           ...userFilter,
-          ...categoryFilter
+          ...categoryFilter,
         },
         order: {
           createdAt: "DESC",
