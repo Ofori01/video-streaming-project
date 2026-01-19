@@ -9,7 +9,7 @@ const LogoutButton: React.FC = () => {
     dispatch(logout())
   }
   return (
-    <Button onClick={handleLogout}>Logout</Button>
+    <Button variant='destructive' className='cursor-pointer' onClick={handleLogout}>Logout</Button>
   )
 }
 

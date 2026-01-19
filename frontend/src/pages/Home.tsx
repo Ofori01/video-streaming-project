@@ -98,7 +98,7 @@ const Home: React.FC = () => {
     },
   ];
   return (
-    <div className="relative text-secondary bg-black min-h-screen">
+    <div className="relative  text-secondary bg-black min-h-screen">
       <HeroSection />
       {/* trending now videos */}
       <div className="py-15 px-15">
@@ -109,7 +109,6 @@ const Home: React.FC = () => {
       <div className="px-15 ">
         <HomeSections sectionTitle="new release" VideoList={data} />
       </div>
-
     </div>
   );
 };

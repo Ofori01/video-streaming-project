@@ -20,7 +20,7 @@ const LoginDialog: React.FC<{ showLoginButton?: boolean, openDialog?:boolean }> 
     <Dialog open={open} onOpenChange={setOpen}>
       {showLoginButton && (
         <DialogTrigger asChild>
-          <Button variant="default">Sign In</Button>
+          <Button variant="ghost" className="cursor-pointer">Sign In</Button>
         </DialogTrigger>
       )}
 
