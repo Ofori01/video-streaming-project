@@ -33,7 +33,21 @@ export interface IVideo {
   updatedAt: Date;
 }
 
+export interface VideoCreate {
+  thumbnail: unknown
+  video: unknown
+  title: string
+  description: string
+  category: string
+}
 
+export interface ICategory {
+  id: number
+  createdAt: Date
+  updatedAt: Date
+  description: string
+  name: string
+}
 
 export enum VIDEO_STATUS {
   ACTIVE = "active",

@@ -9,7 +9,7 @@ interface VideoCardProps {
     profileImage: string;
     name: string;
   };
-  duration: number | null;
+  duration: string | null;
   title: string;
   views: string;
   createdAt: string;
@@ -47,21 +47,23 @@ const VideoCard: React.FC<VideoCardProps> = ({
       <div className="flex flex-row items-start justify-between">
         <div className="flex flex-row items-center gap-x-3">
           {/* profile image */}
-          {
-            !isHorizontal &&
+          {!isHorizontal && (
             <div className=" rounded-full self-start h-6 w-6 overflow-hidden">
-            <img
-              src={author.profileImage}
-              alt={author.name}
-              className="h-full w-full object-cover"
-            />
-          </div>}
+              <img
+                src={author.profileImage}
+                alt={author.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
           {/* title and author name */}
           <div className={`flex flex-col gap-y-0 items-start text-gray-400`}>
             <span className="text-secondary text-md line-clamp-2 text-wrap font-body">
               {title}
             </span>
-            <span className="line-clamp-1 font-body text-wrap">{author.name}</span>
+            <span className="line-clamp-1 font-body text-wrap">
+              {author.name}
+            </span>
             <span className="inline-flex items-center font-body text-nowrap">
               <p>{views} views</p>
               <Dot size={24} />

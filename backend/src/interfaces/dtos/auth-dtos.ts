@@ -1,6 +1,7 @@
 import { InferType, object, string, number } from "yup";
 import { length } from "zod";
 import { extend } from "zod/v4/core/util.cjs";
+import { id } from "zod/v4/locales";
 
 // export interface LoginDto {
 //   email: string;
@@ -21,6 +22,7 @@ export const LoginSchema = object({
   email: string().email("Invalid email").required("Specify a valid email to sign-up"),
   username: string().required("enter a valid username"),
   password: string().required("enter your account password"),
+  roleId: string()
 })
 
 export const SignUpSchema = object({

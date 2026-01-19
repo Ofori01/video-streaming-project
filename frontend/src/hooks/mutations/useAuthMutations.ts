@@ -15,7 +15,8 @@ interface VerifyOtpCredentials {
 interface SignUpCredentials {
   email: string;
   password: string;
-  username: string
+  username: string;
+  role?: string
 }
 
 export const useLogin = () => {
@@ -27,7 +28,7 @@ export const useLogin = () => {
 
 export const useSignUp = () => {
   return useMutation<SignUpDto, ApiErrorResponse,SignUpCredentials>({
-    mutationFn: (userData) => authService.signUp(userData.email,userData.username,userData.password)
+    mutationFn: (userData) => authService.signUp(userData.email,userData.username,userData.password, userData.role)
   })
 }
 

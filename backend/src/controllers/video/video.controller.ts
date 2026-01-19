@@ -22,15 +22,15 @@ export class VideoController {
   CreateVideo = async (
     req: AuthRequest<{}, {}, CreateVideoDto>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       req.body.uploadedByUserId = req.user?.id;
-      
+
       const video = await this._videoService.CreateVideo(
         req.body,
         req.files as UploadFiles,
-        req.user?.id!
+        req.user?.id!,
       );
       return responseHandler.created(res, video, "Video created successfully");
     } catch (error) {
@@ -61,7 +61,7 @@ export class VideoController {
   GetAllVideos = async (
     req: AuthRequest<{}, {}, {}, GetAllVideosQuery>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const userFilter: FindOptionsWhere<VideoEntity> =
@@ -71,12 +71,23 @@ export class VideoController {
               processingStatus: UPLOAD_STATUS.COMPLETED,
             }
           : {};
+      if (req.query.adminVideos && req.user?.role == USER_ROLE.ADMIN) {
+        userFilter.uploadedBy = {
+          id: req.user?.id,
+        };
+      }
+      const categoryFilter: FindOptionsWhere<VideoEntity> = req.query.categoryId
+        ? {
+            category: {
+              id: Number(req.query.categoryId),
+            },
+          }
+        : {};
+
       const videos = await this._videoService.GetAll({
         where: {
           ...userFilter,
-          category: {
-            id: req.query.categoryId,
-          },
+          ...categoryFilter,
         },
         order: {
           createdAt: "DESC",
@@ -102,17 +113,23 @@ export class VideoController {
     }
   };
 
-  GetVideoById = async( req: AuthRequest<GetVideoQueryDto>, res: Response, next: NextFunction) => {
+  GetVideoById = async (
+    req: AuthRequest<GetVideoQueryDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
     try {
-      const video = await this._videoService.GetById(req.params.id, {relations: {
-        category: true,
-        uploadedBy: true,
-        thumbnail: true,
-        video: true
-      }})
-      return responseHandler.success(res,video)
+      const video = await this._videoService.GetById(req.params.id, {
+        relations: {
+          category: true,
+          uploadedBy: true,
+          thumbnail: true,
+          video: true,
+        },
+      });
+      return responseHandler.success(res, video);
     } catch (error) {
-      return next(error)
+      return next(error);
     }
-  }
+  };
 }

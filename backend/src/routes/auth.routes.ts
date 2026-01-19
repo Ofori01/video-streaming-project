@@ -7,7 +7,6 @@ import { UserRepository } from "../repositories/UserRepository";
 import { AuthController } from "../controllers/auth/auth.controller";
 import { validate } from "../middlewares/validation/validation";
 import { LoginSchema } from "../interfaces/dtos/auth-dtos";
-import { UserService } from '../services/UserService';
 import { UserRolesRepository } from '../repositories/UserRolesRepository';
 
 const authRoutes = Router();
@@ -22,4 +21,5 @@ const authController = new AuthController(authService,);
 authRoutes.post("/login", validate(LoginSchema), authController.login);
 authRoutes.post("/verify-otp", validate(VerifyOtpSchema), authController.verifyOtp)
 authRoutes.post("/sign-up",validate(SignUpSchema), authController.signUp)
+authRoutes.get("/roles", authController.availableRoles)
 export default authRoutes;
