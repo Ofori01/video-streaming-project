@@ -68,7 +68,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
   const { mutate: signUp, isPending } = useSignUp();
   const { data: rolesData, isLoading: isLoadingRoles } = useGetAvailableRoles();
   const dispatch = useDispatch();
-  console.log(rolesData);
 
   const form = useFormik({
     initialValues: {

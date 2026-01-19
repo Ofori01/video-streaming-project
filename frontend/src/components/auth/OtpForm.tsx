@@ -29,34 +29,38 @@ interface OtpFormProps {
   email: string;
 }
 
-
 export function OtpForm({ email }: OtpFormProps) {
-    const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [otp, setOtp] = React.useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const {mutate: verifyOtp, isPending} = useVerifyOtp()
+  const { mutate: verifyOtp, isPending } = useVerifyOtp();
 
-  const onSubmit =(value: string) => {
-    verifyOtp({email,otp: value}, {
-        onSuccess: (response)=> {
-            toast.success(response.message)
-            dispatch(setCredentials({
-                token : response.data.token,
-                userId: response.data.user.id,
-                role: response.data.user.role,
-                
-            }))
-            // check role and navigate user
-            if(response.data.user.role === USER_ROLE.ADMIN){
-              navigate("/admin",{replace: true, viewTransition: true})
-            }
+  const onSubmit = (value: string) => {
+    verifyOtp(
+      { email, otp: value },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message);
+          dispatch(
+            setCredentials({
+              token: response.data.token,
+              userId: response.data.user.id,
+              role: response.data.user.role,
+            }),
+          );
+          // check role and navigate user
+          if (response.data.user.role === USER_ROLE.ADMIN) {
+            navigate("/admin", { replace: true, viewTransition: true });
+          }
+          
         },
-        onError: (err)=> {
-            toast.error(err.message)
-        }
-    })
-  }
+        onError: (err) => {
+          toast.error(err.message);
+        },
+      },
+    );
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length === 6) {

@@ -4,9 +4,9 @@ import banner3 from "../assets/banner_3.jpg";
 import VideoCard from "@/components/Videos/VideoCard";
 import { useGetAllVideos } from "@/hooks/queries/useVideoQuerries";
 const Movies: React.FC = () => {
-  const { data, error, isLoading, isError } = useGetAllVideos();
+  const { data = [], error, isLoading, isError } = useGetAllVideos();
   return (
-    <div className="bg-black text-secondary relative px-15 py-15">
+    <div className="bg-black text-secondary relative px-15 py-15 min-h-screen">
       {/* filters bar */}
       <FilterBar className="mt-10 top-10" />
 

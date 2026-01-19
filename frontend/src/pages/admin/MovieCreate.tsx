@@ -190,7 +190,7 @@ const MovieCreate: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-15 pt-2 pb-4 px-2 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-destructive mb-2">
           Upload Movie

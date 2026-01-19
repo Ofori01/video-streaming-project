@@ -12,9 +12,7 @@ import { cn } from "@/lib/utils";
 const FilterBar: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <div className={cn("backdrop-blur-3xl z-10", className)}>
-      {/* left arrow */}
-      {/* right arrow */}
-      {/* filters */}
+      
       <Carousel
         className="w-full"
         opts={{
