@@ -18,15 +18,11 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { shallowEqual, useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-
   navMain: [
     {
       title: "Movies",
@@ -68,6 +64,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const {email,name } = useSelector((state: RootState)=> ({name: state.auth.username, email: state.auth.email, }), shallowEqual)
+  const avatar = "/avatars/shadcn.jpg"
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -91,7 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={{avatar, email, name}} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
