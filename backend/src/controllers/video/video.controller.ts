@@ -71,7 +71,7 @@ export class VideoController {
               processingStatus: UPLOAD_STATUS.COMPLETED,
             }
           : {};
-      if(req.query.adminVideos){
+      if(req.query.adminVideos && req.user?.role== USER_ROLE.ADMIN){
         userFilter.uploadedBy = {
           id: req.user?.id
         }
