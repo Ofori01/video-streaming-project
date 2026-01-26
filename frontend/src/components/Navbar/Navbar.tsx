@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
       <div className="relative">
         {/* for mobile */}
         {isMobile && (
-          <button onClick={toggleMenu} className="p-2 text-black">
+          <button onClick={toggleMenu} className="p-2 text-white">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         )}

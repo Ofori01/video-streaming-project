@@ -13,7 +13,7 @@ const SignUpButton: React.FC = () => {
   return (
     <Dialog  open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">Sign Up</Button>
+        <Button variant="ghost" className="cursor-pointer">Sign Up</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-125 z-100 max-h-[90vh] overflow-y-scroll">
         <SignUpForm handleSuccess={handleSignUpSuccess} />
