@@ -145,7 +145,7 @@ const MovieCreate: React.FC = () => {
       const formData = new FormData();
       formData.append("title", values.title);
       formData.append("description", values.description);
-      formData.append("category", values.category);
+      formData.append("categoryId", values.category);
       if (values.video) formData.append("video", values.video);
       if (values.thumbnail) formData.append("thumbnail", values.thumbnail);
 
