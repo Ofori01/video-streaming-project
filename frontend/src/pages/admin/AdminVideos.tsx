@@ -1,7 +1,8 @@
-import VideoCard from "@/components/Videos/VideoCard";
+// import VideoCard from "@/components/Videos/VideoCard";
 import { useGetAllVideos } from "@/hooks/queries/useVideoQuerries";
 import React from "react";
 import banner3 from "../../assets/banner_3.jpg";
+import AdminVideoCard from "@/components/Videos/AdminVideoCard";
 
 const AdminVideos: React.FC = () => {
   const {
@@ -24,19 +25,31 @@ const AdminVideos: React.FC = () => {
   }
 
   return (
-    <div className="h-screen  bg-slate-950">
+    <div className="h-screen">
       <div className="px-2 mx-15 pb-4 pt-2 max-w-4xl grid grid-cols-1 gap-y-5 gap-x-5 md:grid-cols-2 lg:grid-cols-3">
         {data.map((video, index) => (
-          <VideoCard
+          <AdminVideoCard
             title={video.title}
-            duration={video.duration}
+            // duration={video.duration}
             id={index}
-            views="20m"
-            createdAt="3 months ago"
+            video={video?.video?.url ?? null}
+            processingStatus={video.processingStatus}
+            isHorizontal
+            createdAt="3 Months ago"
             author={{ name: video.uploadedBy.username, profileImage: banner3 }}
             key={index}
-            thumbnail={video.thumbnail.url}
+            thumbnail={video?.thumbnail?.url ?? null}
           />
+          // <VideoCard
+          //   title={video.title}
+          //   duration={video.duration}
+          //   id={index}
+          //   views="20m"
+          //   createdAt="3 months ago"
+          //   author={{ name: video.uploadedBy.username, profileImage: banner3 }}
+          //   key={index}
+          //   thumbnail={video.thumbnail.url}
+          // />
         ))}
       </div>
     </div>
