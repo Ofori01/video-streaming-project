@@ -15,7 +15,8 @@ export default class S3StorageService {
         key: string,
         body: Buffer,
         contentType?: string,
-        metaData?: Record<string, string>
+        metaData?: Record<string, string>,
+        onProgress?: (loaded: number, total: number) => void,
     }){
         const uploader = new Upload({
             client: S3,
@@ -29,8 +30,10 @@ export default class S3StorageService {
             }
         })
         // Todo - add progress event response to client
-        uploader.on("httpUploadProgress" ,(progress)=> {
-            console.log(progress )
+        uploader.on("httpUploadProgress", (progress) => {
+            if (params.onProgress && progress.loaded != null && progress.total != null) {
+                params.onProgress(progress.loaded, progress.total);
+            }
         })
         await uploader.done()
         return {
