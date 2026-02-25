@@ -10,7 +10,9 @@ export const endpoints = {
     getAllVideos: '/video',
     getVideo: (videoId: number) => `/videos/${videoId}`,
     createVideo: "/video",
-    getAllCategories: "/category"
+    getAllCategories: "/category",
 
+    // SSE
+    uploadProgressSse: (videoId: number) => `/api/sse/${videoId}`,
 }
 
