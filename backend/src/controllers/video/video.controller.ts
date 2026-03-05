@@ -15,6 +15,9 @@ import {
 import { FindOptionsWhere } from "typeorm";
 import { VideoEntity } from "../../entities/VideoEntity";
 import { UploadFiles } from "../../interfaces/common/Files";
+import { AppDataSource } from "../../config/db.config";
+import { UserEntity } from "../../entities/UserEntity";
+import { CategoryEntity } from "../../entities/CategoryEntity";
 
 export class VideoController {
   constructor(private _videoService: IVideoService) {}
@@ -128,6 +131,70 @@ export class VideoController {
         },
       });
       return responseHandler.success(res, video);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  GetDashboardStats = async (
+    _req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const videoRepo = AppDataSource.getRepository(VideoEntity);
+      const userRepo = AppDataSource.getRepository(UserEntity);
+      const categoryRepo = AppDataSource.getRepository(CategoryEntity);
+
+      const [
+        totalVideos,
+        pendingVideos,
+        processingVideos,
+        completedVideos,
+        failedVideos,
+        totalUsers,
+        totalCategories,
+        recentVideos,
+      ] = await Promise.all([
+        videoRepo.count(),
+        videoRepo.count({ where: { processingStatus: UPLOAD_STATUS.PENDING } }),
+        videoRepo.count({
+          where: { processingStatus: UPLOAD_STATUS.PROCESSING },
+        }),
+        videoRepo.count({
+          where: { processingStatus: UPLOAD_STATUS.COMPLETED },
+        }),
+        videoRepo.count({ where: { processingStatus: UPLOAD_STATUS.FAILED } }),
+        userRepo.count(),
+        categoryRepo.count(),
+        videoRepo.find({
+          order: { createdAt: "DESC" },
+          take: 6,
+          relations: { uploadedBy: true, thumbnail: true, category: true },
+          select: {
+            id: true,
+            title: true,
+            processingStatus: true,
+            status: true,
+            createdAt: true,
+            uploadedBy: { id: true, username: true },
+            category: { id: true, name: true },
+          },
+        }),
+      ]);
+
+      return responseHandler.success(res, {
+        videos: {
+          total: totalVideos,
+          pending: pendingVideos,
+          processing: processingVideos,
+          completed: completedVideos,
+          failed: failedVideos,
+        },
+        users: { total: totalUsers },
+        categories: { total: totalCategories },
+        recentVideos,
+      });
     } catch (error) {
       return next(error);
     }

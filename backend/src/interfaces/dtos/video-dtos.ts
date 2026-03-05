@@ -26,7 +26,7 @@ const CreateVideoBodySchema = object({
     .max(30, "Length must not be more than 30"),
   description: string()
     .required("Video Description is required")
-    .max(255, "Description must not exceed 255 characters"),
+    .max(1000, "Description must not exceed 1000 characters"),
   categoryId: number().required("categoryId is required"),
   uploadedByUserId: number().optional(),
 });

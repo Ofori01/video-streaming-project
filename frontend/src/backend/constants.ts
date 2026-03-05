@@ -1,18 +1,20 @@
-
 export const endpoints = {
-    //auth
-    login: '/auth/login',
-    verifyOtp: '/auth/verify-otp',
-    signUp: '/auth/sign-up',
-    availableRoles: 'auth/roles',
+  //auth
+  login: "/auth/login",
+  verifyOtp: "/auth/verify-otp",
+  signUp: "/auth/sign-up",
+  availableRoles: "auth/roles",
 
-    // videos
-    getAllVideos: '/video',
-    getVideo: (videoId: number) => `/videos/${videoId}`,
-    createVideo: "/video",
-    getAllCategories: "/category",
 
-    // SSE
-    uploadProgressSse: (videoId: number) => `/api/sse/${videoId}`,
-}
+  // videos
+  getAllVideos: "/video",
+  getVideo: (videoId: number) => `/video/${videoId}`,
+  createVideo: "/video",
+  getAllCategories: "/category",
 
+  // dashboard
+  getDashboardStats: "/video/stats",
+
+  // SSE
+  uploadProgressSse: (videoId: number) => `/sse/${videoId}`,
+};

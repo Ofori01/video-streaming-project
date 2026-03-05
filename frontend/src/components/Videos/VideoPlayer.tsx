@@ -1,24 +1,36 @@
-import { cn } from '@/lib/utils';
-import React from 'react'
+import { cn } from "@/lib/utils";
+import React from "react";
 import ReactPlayer from "react-player";
 
-
 interface VideoPlayerProps {
-    className?: string
+  className?: string;
+  url: string;
+  /** Thumbnail URL shown as poster before playback starts. Pass false to disable. */
+  light?: string | boolean;
 }
 
-// todo - will take videoUrl as prop
-
-const VideoPlayer : React.FC<VideoPlayerProps> = ({className}) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  className,
+  url,
+  light = true,
+}) => {
   return (
-    <div className={cn(className, " w-full rounded-xl  overflow-hidden ")}>
-            <ReactPlayer
-              controls
-              src="https://www.youtube.com/watch?v=LXb3EKWsInQ"
-              style={{ width: "100%", height: "auto", aspectRatio: "16/9" }}
-            />
-          </div>
-  )
-}
+    <div
+      className={cn(
+        className,
+        "w-full aspect-video rounded-xl overflow-hidden",
+      )}
+    >
+      <ReactPlayer
+        src={url}
+        light={light}
+        controls
+        width="100%"
+        height="100%"
+        playsInline
+      />
+    </div>
+  );
+};
 
-export default VideoPlayer
+export default VideoPlayer;

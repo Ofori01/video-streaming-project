@@ -4,49 +4,49 @@ export interface IVideo {
   description: string;
   duration: number | null;
   status: VIDEO_STATUS;
-  processingStatus: UPLOAD_STATUS
+  processingStatus: UPLOAD_STATUS;
   uploadedBy: {
-    id: number
-    username: string
-  }
+    id: number;
+    username: string;
+  };
   category: {
-    id: number
-    createdAt:Date
-    updatedAt: Date
-    name: string
-    description: string
-  }
+    id: number;
+    createdAt: Date;
+    updatedAt: Date;
+    name: string;
+    description: string;
+  };
   thumbnail: {
-    id: number
-    createdAt: Date
-    updatedAt: Date
-    url: string
-    type: FILE_TYPE
-  }
+    id: number;
+    createdAt: Date;
+    updatedAt: Date;
+    url: string;
+    type: FILE_TYPE;
+  };
   video: {
-    createdAt: Date
-    updatedAt: Date
-    url: string
-    type: FILE_TYPE
-  }
+    createdAt: Date;
+    updatedAt: Date;
+    url: string;
+    type: FILE_TYPE;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface VideoCreate {
-  thumbnail: unknown
-  video: unknown
-  title: string
-  description: string
-  category: string
+  thumbnail: unknown;
+  video: unknown;
+  title: string;
+  description: string;
+  category: string;
 }
 
 export interface ICategory {
-  id: number
-  createdAt: Date
-  updatedAt: Date
-  description: string
-  name: string
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  description: string;
+  name: string;
 }
 
 export enum VIDEO_STATUS {
@@ -66,4 +66,28 @@ export enum FILE_TYPE {
   THUMBNAIL = "thumbnail",
   VIDEO = "video",
   PROFILE_PICTURE = "profilePicture",
+}
+
+export interface IRecentVideo {
+  id: number;
+  title: string;
+  processingStatus: UPLOAD_STATUS;
+  status: VIDEO_STATUS;
+  createdAt: Date;
+  uploadedBy: { id: number; username: string };
+  category: { id: number; name: string } | null;
+  thumbnail: { url: string } | null;
+}
+
+export interface IDashboardStats {
+  videos: {
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+  };
+  users: { total: number };
+  categories: { total: number };
+  recentVideos: IRecentVideo[];
 }

@@ -57,7 +57,7 @@ videoRoutes.post(
   authMiddleware.authorize(USER_ROLE.ADMIN),
   fileHandler,
   validate(CreateVideoSchema),
-  videoController.CreateVideo
+  videoController.CreateVideo,
 );
 
 /**
@@ -80,7 +80,18 @@ videoRoutes.post(
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-videoRoutes.get("", validate(GetAllVideosValidationSchema), videoController.GetAllVideos);
+videoRoutes.get(
+  "/stats",
+  authMiddleware.authenticate,
+  authMiddleware.authorize(USER_ROLE.ADMIN),
+  videoController.GetDashboardStats,
+);
+
+videoRoutes.get(
+  "",
+  validate(GetAllVideosValidationSchema),
+  videoController.GetAllVideos,
+);
 
 /**
  * @swagger
