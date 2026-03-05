@@ -1,11 +1,8 @@
 "use client";
 
 import * as React from "react";
-import {
-  Settings2,
-  TvMinimalPlay,
-} from "lucide-react";
-import Logo from '../assets/Logo.svg'
+import { LayoutDashboard, Settings2, TvMinimalPlay } from "lucide-react";
+import Logo from "../assets/Logo.svg";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -24,6 +21,13 @@ import type { RootState } from "@/store/store";
 // This is sample data.
 const data = {
   navMain: [
+    {
+      title: "Dashboard",
+      url: "/admin",
+      icon: LayoutDashboard,
+      isActive: false,
+      items: [],
+    },
     {
       title: "Movies",
       url: "#",
@@ -64,8 +68,14 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {email,name } = useSelector((state: RootState)=> ({name: state.auth.username, email: state.auth.email, }), shallowEqual)
-  const avatar = "/avatars/shadcn.jpg"
+  const { email, name } = useSelector(
+    (state: RootState) => ({
+      name: state.auth.username,
+      email: state.auth.email,
+    }),
+    shallowEqual,
+  );
+  const avatar = "/avatars/shadcn.jpg";
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -89,7 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{avatar, email, name}} />
+        <NavUser user={{ avatar, email, name }} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

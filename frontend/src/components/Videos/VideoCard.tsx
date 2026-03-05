@@ -34,7 +34,11 @@ const VideoCard: React.FC<VideoCardProps> = ({
       className={` ${isHorizontal ? "flex-row" : "flex-col"} flex rounded-lg p-2  gap-2 hover:bg-red-900/30 hover:backdrop-blur-lg hover:cursor-pointer group transition-all ease-in-out duration-600`}
     >
       {/* thumbnail and duration */}
-      <div className="w-full aspect-video overflow-hidden rounded-lg relative">
+      <div
+        className={`${
+          isHorizontal ? "w-36 shrink-0" : "w-full"
+        } aspect-video overflow-hidden rounded-lg relative`}
+      >
         <img
           src={thumbnail}
           className="h-full w-full object-cover group-hover:scale-105 duration-300 transition-transform"
