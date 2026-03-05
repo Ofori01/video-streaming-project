@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Formik, Form, type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import {
@@ -31,6 +31,8 @@ import { useCreateVideo } from "@/hooks/mutations/useVideoMutations";
 import { useGetAllVideoCategories } from "@/hooks/queries/useVideoQuerries";
 import { toast } from "sonner";
 import type { ApiErrorResponse } from "@/types/errors";
+import { Progress } from "@/components/ui/progress";
+import useUploadSSE from "@/hooks/use-upload-sse";
 
 interface MovieFormValues {
   title: string;
@@ -84,6 +86,18 @@ const MovieCreate: React.FC = () => {
     useGetAllVideoCategories();
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  // SSE upload progress
+  const [uploadedVideoId, setUploadedVideoId] = useState<number | null>(null);
+
+  const handleUploadComplete = useCallback(() => {
+    setTimeout(() => setUploadedVideoId(null), 3000);
+  }, []);
+
+  const { percent, status: sseStatus } = useUploadSSE(
+    uploadedVideoId,
+    handleUploadComplete,
+  );
 
   const initialValues: MovieFormValues = {
     title: "",
@@ -149,10 +163,13 @@ const MovieCreate: React.FC = () => {
       if (values.video) formData.append("video", values.video);
       if (values.thumbnail) formData.append("thumbnail", values.thumbnail);
 
-      await createVideoMutation.mutateAsync(formData);
+      const createdVideo = await createVideoMutation.mutateAsync(formData);
+
+      // Video record created — start listening to S3 upload progress via SSE
+      setUploadedVideoId(createdVideo.id);
 
       toast.success("Movie uploaded successfully!", {
-        description: `"${values.title}" has been uploaded and is now available.`,
+        description: `"${values.title}" is being processed. Watch the progress bar below.`,
         icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
       });
 
@@ -443,6 +460,55 @@ const MovieCreate: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Upload Progress Bar */}
+              {uploadedVideoId !== null && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">
+                      {sseStatus === "complete"
+                        ? "Upload Complete"
+                        : sseStatus === "error"
+                          ? "Upload Failed"
+                          : "Uploading to Cloud Storage"}
+                    </CardTitle>
+                    <CardDescription>
+                      {sseStatus === "complete"
+                        ? "Your video has been successfully uploaded to the cloud."
+                        : sseStatus === "error"
+                          ? "Something went wrong during the upload."
+                          : "Transferring your video file to AWS S3. This may take a moment for large files."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          {sseStatus === "connecting"
+                            ? "Connecting..."
+                            : `${percent}% uploaded`}
+                        </span>
+                        {sseStatus === "complete" && (
+                          <span className="text-green-500 font-medium flex items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Done
+                          </span>
+                        )}
+                      </div>
+                      <Progress
+                        value={percent}
+                        className={`h-2 transition-all duration-300 ${
+                          sseStatus === "complete"
+                            ? "[&>div]:bg-green-500"
+                            : sseStatus === "error"
+                              ? "[&>div]:bg-destructive"
+                              : ""
+                        }`}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Submit Button */}
               <div className="flex justify-end gap-4">
                 <Button
@@ -454,6 +520,7 @@ const MovieCreate: React.FC = () => {
                     setFieldValue("category", "");
                     clearVideo(setFieldValue);
                     clearThumbnail(setFieldValue);
+                    setUploadedVideoId(null);
                   }}
                   disabled={isSubmitting}
                 >

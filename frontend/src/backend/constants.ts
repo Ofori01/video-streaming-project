@@ -5,6 +5,7 @@ export const endpoints = {
   signUp: "/auth/sign-up",
   availableRoles: "auth/roles",
 
+
   // videos
   getAllVideos: "/video",
   getVideo: (videoId: number) => `/video/${videoId}`,
