@@ -13,4 +13,7 @@ export const endpoints = {
 
   // dashboard
   getDashboardStats: "/video/stats",
+
+  // SSE
+  uploadProgressSse: (videoId: number) => `/sse/${videoId}`,
 };
