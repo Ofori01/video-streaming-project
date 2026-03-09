@@ -108,7 +108,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-semibold text-foreground leading-none">
+          <span className="text-sm font-semibold text-white leading-none">
             {comment.createdBy.username}
           </span>
           <span className="text-muted-foreground text-xs">·</span>
@@ -149,7 +149,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-foreground/90 leading-relaxed break-words">
+          <p className="text-sm text-slate-50 leading-relaxed wrap-break-word">
             {comment.content}
           </p>
         )}

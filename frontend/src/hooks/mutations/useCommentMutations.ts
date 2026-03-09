@@ -15,7 +15,9 @@ export const useCreateComment = (videoId: number) => {
           queryKey: commentKeys.replies(variables.parentId),
         });
       } else {
-        queryClient.invalidateQueries({ queryKey: commentKeys.lists() });
+        queryClient.invalidateQueries({
+          queryKey: commentKeys.infinite(videoId),
+        });
       }
     },
   });

@@ -1,31 +1,27 @@
 import commentService, { type CommentsPage } from "@/backend/comment.service";
 import type { IComment } from "@/types/Comments";
 import type { ApiErrorResponse } from "@/types/errors";
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 export const commentKeys = {
   all: ["comments"] as const,
-  lists: () => [...commentKeys.all, "lists"] as const,
-  list: (videoId: number, page: number) =>
-    [...commentKeys.lists(), videoId, page] as const,
+  infinite: (videoId: number) =>
+    [...commentKeys.all, "infinite", videoId] as const,
   replies: (commentId: number) =>
     [...commentKeys.all, "replies", commentId] as const,
 };
 
-export const useGetVideoComments = (
-  videoId: number,
-  page: number = 1,
-  limit: number = 10,
-  options?: Omit<
-    UseQueryOptions<CommentsPage, ApiErrorResponse>,
-    "queryKey" | "queryFn"
-  >,
-) => {
-  return useQuery<CommentsPage, ApiErrorResponse>({
-    queryKey: commentKeys.list(videoId, page),
-    queryFn: () => commentService.getVideoComments(videoId, page, limit),
+export const useGetVideoComments = (videoId: number, limit: number = 10) => {
+  return useInfiniteQuery<CommentsPage, ApiErrorResponse>({
+    queryKey: commentKeys.infinite(videoId),
+    queryFn: ({ pageParam }) =>
+      commentService.getVideoComments(videoId, pageParam as number, limit),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
     enabled: !!videoId && videoId > 0,
-    ...options,
   });
 };
 

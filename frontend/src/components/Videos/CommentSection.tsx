@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import type { RootState } from "@/store/store";
-import type { IComment } from "@/types/Comments";
 import { useGetVideoComments } from "@/hooks/queries/useCommentQueries";
 import { useCreateComment } from "@/hooks/mutations/useCommentMutations";
 import CommentItem from "./CommentItem";
@@ -31,27 +30,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
     (state: RootState) => state.auth,
   );
 
-  const [page, setPage] = useState(1);
-  const [allComments, setAllComments] = useState<IComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
-  const prevDataRef = useRef<IComment[] | undefined>(undefined);
 
-  const { data, isPending } = useGetVideoComments(videoId, page);
+  const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetVideoComments(videoId);
 
-  useEffect(() => {
-    if (!data) return;
-    const incoming = data.comments;
-    if (page === 1) {
-      setAllComments(incoming);
-    } else if (incoming !== prevDataRef.current) {
-      setAllComments((prev) => {
-        const existingIds = new Set(prev.map((c) => c.id));
-        return [...prev, ...incoming.filter((c) => !existingIds.has(c.id))];
-      });
-    }
-    prevDataRef.current = incoming;
-  }, [data, page]);
+  const allComments = data?.pages.flatMap((p) => p.comments) ?? [];
 
   const { mutate: createComment, isPending: submitting } =
     useCreateComment(videoId);
@@ -65,15 +50,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
         onSuccess: () => {
           setNewComment("");
           setInputFocused(false);
-          setPage(1);
         },
       },
     );
   };
 
-  const totalPages = data?.pagination?.totalPages ?? 1;
-  const totalItems = data?.pagination?.totalItems ?? 0;
-  const canLoadMore = page < totalPages;
+  const totalItems = data?.pages[0]?.pagination.totalItems ?? 0;
 
   return (
     <div className="mt-5 p-4 rounded-lg bg-gray-400/20 backdrop-blur-2xl">
@@ -96,7 +78,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onFocus={() => setInputFocused(true)}
-              className="text-sm min-h-10 bg-background/40 resize-none border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-b-foreground px-0 transition-all"
+              className="text-sm min-h-10 bg-background/40 resize-none border-0  focus-visible:ring-0 focus-visible:border-b-foreground px-2 rounded-sm transition-all"
             />
             {inputFocused && (
               <div className="flex justify-end gap-2">
@@ -107,7 +89,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
                     setInputFocused(false);
                     setNewComment("");
                   }}
-                  className="rounded-full text-xs"
+                  className="rounded-full text-xs cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -115,7 +97,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
                   size="sm"
                   onClick={handleSubmit}
                   disabled={submitting || !newComment.trim()}
-                  className="rounded-full text-xs"
+                  className="rounded-full text-xs cursor-pointer"
                 >
                   {submitting ? "Posting…" : "Comment"}
                 </Button>
@@ -155,15 +137,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ videoId }) => {
           ))}
 
           {/* Load more */}
-          {canLoadMore && (
+          {hasNextPage && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={isPending}
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
               className="self-center rounded-full text-xs text-muted-foreground"
             >
-              {isPending ? "Loading…" : "Load more comments"}
+              {isFetchingNextPage ? "Loading…" : "Load more comments"}
             </Button>
           )}
         </div>
