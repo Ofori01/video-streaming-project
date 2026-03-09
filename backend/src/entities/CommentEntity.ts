@@ -5,10 +5,10 @@ import { UserEntity } from "./UserEntity";
 
 @Entity()
 export class CommentEntity extends BaseEntity {
-  @ManyToOne(() => VideoEntity)
+  @ManyToOne(() => VideoEntity, {nullable: false, onDelete: "CASCADE"})
   video: VideoEntity;
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, {nullable: false, onDelete:"CASCADE"})
   user: UserEntity;
 
   @Column("text")
