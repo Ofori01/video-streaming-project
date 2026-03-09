@@ -19,7 +19,7 @@ export abstract class GenericService<T extends BaseEntity>
     return await this._repository.GetOne(options)
   }
 
-  async GetById(id: number, options: FindOneOptions): Promise<T> {
+  async GetById(id: number, options?: FindOneOptions): Promise<T> {
     return await this._repository.GetById(id, options);
   }
   async Update(id: number, entity: T): Promise<T> {

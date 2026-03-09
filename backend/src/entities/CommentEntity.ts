@@ -9,12 +9,12 @@ export class CommentEntity extends BaseEntity {
   video: VideoEntity;
 
   @ManyToOne(() => UserEntity, {nullable: false, onDelete:"CASCADE"})
-  user: UserEntity;
+  createdBy: UserEntity;
 
   @Column("text")
   content: string;
 
-  @ManyToOne(() => CommentEntity, (comment) => comment.replies)
+  @ManyToOne(() => CommentEntity, (comment) => comment.replies,{nullable: true, onDelete:"CASCADE"})
   parent: CommentEntity;
 
   @OneToMany(() => CommentEntity, (comment) => comment.parent)
