@@ -95,7 +95,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           </AvatarFallback>
         </Avatar>
         {/* thread line — only show when replies are expanded */}
-        {showReplies && replies.length > 0 && depth === 0 && (
+        {showReplies && replies.length > 0 && (
           <button
             className="flex-1 w-px bg-border hover:bg-destructive/50 transition-colors cursor-pointer min-h-4"
             onClick={() => setShowReplies(false)}
@@ -231,60 +231,58 @@ const CommentItem: React.FC<CommentItemProps> = ({
           </div>
         )}
 
-        {/* Expand/collapse replies — only on top-level comments */}
-        {depth === 0 && (
-          <div className="mt-1">
-            {loadingReplies && showReplies ? (
-              <div className="flex flex-col gap-2 pl-2 border-l border-border mt-2">
-                {[1, 2].map((i) => (
-                  <div key={i} className="flex gap-2">
-                    <Skeleton className="size-7 rounded-full shrink-0 opacity-20" />
-                    <div className="flex flex-col gap-1.5 flex-1">
-                      <Skeleton className="h-3 w-24 opacity-20" />
-                      <Skeleton className="h-3 w-3/4 opacity-20" />
-                    </div>
+        {/* Expand/collapse replies — dynamic at any depth */}
+        <div className="mt-1">
+          {loadingReplies && showReplies ? (
+            <div className="flex flex-col gap-2 pl-2 border-l border-border mt-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex gap-2">
+                  <Skeleton className="size-7 rounded-full shrink-0 opacity-20" />
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <Skeleton className="h-3 w-24 opacity-20" />
+                    <Skeleton className="h-3 w-3/4 opacity-20" />
                   </div>
-                ))}
-              </div>
-            ) : showReplies && replies.length > 0 ? (
-              <div className="flex flex-col gap-3 mt-2 pl-3 border-l-2 border-border">
-                {replies.map((reply) => (
-                  <CommentItem
-                    key={reply.id}
-                    comment={reply}
-                    videoId={videoId}
-                    currentUserId={currentUserId}
-                    depth={1}
-                  />
-                ))}
-              </div>
-            ) : null}
+                </div>
+              ))}
+            </div>
+          ) : showReplies && replies.length > 0 ? (
+            <div className="flex flex-col gap-3 mt-2 pl-3 border-l-2 border-border">
+              {replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  videoId={videoId}
+                  currentUserId={currentUserId}
+                  depth={depth + 1}
+                />
+              ))}
+            </div>
+          ) : null}
 
-            {/* Show/hide replies toggle */}
-            {!loadingReplies && (showReplies ? replies.length > 0 : true) && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowReplies((p) => !p)}
-                className="mt-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground rounded-full gap-1"
-              >
-                {showReplies ? (
-                  <>
-                    <ChevronUp className="size-3.5" />
-                    Hide replies
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="size-3.5" />
-                    {replies.length > 0
-                      ? `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`
-                      : "View replies"}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        )}
+          {/* Show/hide replies toggle */}
+          {!loadingReplies && (showReplies ? replies.length > 0 : true) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowReplies((p) => !p)}
+              className="mt-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground rounded-full gap-1"
+            >
+              {showReplies ? (
+                <>
+                  <ChevronUp className="size-3.5" />
+                  Hide replies
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="size-3.5" />
+                  {replies.length > 0
+                    ? `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`
+                    : "View replies"}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
