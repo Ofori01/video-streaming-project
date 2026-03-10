@@ -44,7 +44,7 @@ const formSchema = Yup.object().shape({
     .max(20, "Username must be at most 20 characters.")
     .matches(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores."
+      "Username can only contain letters, numbers, and underscores.",
     ),
   email: Yup.string()
     .required("Email is required.")
@@ -96,7 +96,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
             role: response.data.user.role,
             email: response.data.user.email,
             username: response.data.user.username,
-          })
+          }),
         );
         handleSuccess();
       },
