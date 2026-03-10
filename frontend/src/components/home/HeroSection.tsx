@@ -41,9 +41,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   const [prevSlide, setPrevSlide] = useState<number | null>(null);
   const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const slides: HeroSlide[] = videos.length > 0 ? videos.slice(0, 5).map(mapToSlide) : [];
-
-  
+  const slides: HeroSlide[] =
+    videos.length > 0 ? videos.slice(0, 5).map(mapToSlide) : [];
 
   const current = slides[currentSlide];
 
@@ -115,6 +114,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         style={{ backgroundImage: `url(${current.backgroundImage})` }}
       />
 
+      {/* Subtle overlay for text legibility */}
+      <div className="absolute inset-0 z-10 bg-linear-to-r from-black/30 via-black/20 via-50% to-transparent to-80% pointer-events-none" />
+
       {/* Content — sits above both background layers but below indicators */}
       <div className="relative z-20 flex flex-col gap-y-3 md:gap-y-3 lg:gap-y-4 top-[20vh] md:top-[20vh] lg:top-[30vh] ml-10 p-5 h-[115vh] md:h-[110vh] lg:h-[105vh]">
         {/* categories */}
@@ -155,7 +157,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      <div className="absolute inset-0 z-10 bg-linear-to-b from-transparent from-70% via-transparent to-black pointer-events-none" />
+      <div className="absolute inset-0 z-15 bg-linear-to-b from-transparent from-70% via-transparent to-black pointer-events-none" />
       <CarouselIndicators
         className="mx-auto z-30 absolute bottom-12 left-15 right-0"
         count={slides.length}
