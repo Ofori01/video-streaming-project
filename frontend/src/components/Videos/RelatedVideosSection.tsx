@@ -39,7 +39,7 @@ const RelatedVideosSection: React.FC<RelatedVideosSectionProps> = ({
     <div className="pl-2 flex flex-col w-full">
       {/* filter bar */}
       <FilterBar
-        className="sticky top-0 z-99"
+        className="sticky top-0 z-99 px-10"
         selectedCategoryId={selectedCategoryId}
         onSelectCategory={setSelectedCategoryId}
       />

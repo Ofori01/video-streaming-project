@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { shallowEqual, useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
+import { NavLink } from "react-router";
 
 // This is sample data.
 const data = {
@@ -82,14 +83,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/admin">
+              <NavLink to="/">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <img src={Logo} className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Stream Vibe</span>
                 </div>
-              </a>
+              </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

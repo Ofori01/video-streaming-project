@@ -97,10 +97,10 @@ const FilterBarNavButtons = () => {
   return (
     <>
       {canScrollNext && (
-        <CarouselNext className="absolute text-secondary bg-black outline-none border-0 right-0" />
+        <CarouselNext className="absolute text-secondary bg-black outline-none border-0 -right-9" />
       )}
       {canScrollPrev && (
-        <CarouselPrevious className="absolute left-0 bg-black border-0" />
+        <CarouselPrevious className="absolute -left-9 bg-black border-0" />
       )}
     </>
   );
