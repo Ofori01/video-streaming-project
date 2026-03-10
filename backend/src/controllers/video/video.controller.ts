@@ -13,10 +13,11 @@ import {
   VIDEO_STATUS,
 } from "../../lib/types/common/enums";
 import { FindOptionsWhere } from "typeorm";
-import { UserEntity } from "../../entities/UserEntity";
 import { VideoEntity } from "../../entities/VideoEntity";
 import { UploadFiles } from "../../interfaces/common/Files";
-import { vi } from "zod/v4/locales";
+import { AppDataSource } from "../../config/db.config";
+import { UserEntity } from "../../entities/UserEntity";
+import { CategoryEntity } from "../../entities/CategoryEntity";
 
 export class VideoController {
   constructor(private _videoService: IVideoService) {}
@@ -24,13 +25,15 @@ export class VideoController {
   CreateVideo = async (
     req: AuthRequest<{}, {}, CreateVideoDto>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       req.body.uploadedByUserId = req.user?.id;
+
       const video = await this._videoService.CreateVideo(
         req.body,
-        req.files as UploadFiles
+        req.files as UploadFiles,
+        req.user?.id!,
       );
       return responseHandler.created(res, video, "Video created successfully");
     } catch (error) {
@@ -61,7 +64,7 @@ export class VideoController {
   GetAllVideos = async (
     req: AuthRequest<{}, {}, {}, GetAllVideosQuery>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const userFilter: FindOptionsWhere<VideoEntity> =
@@ -71,12 +74,23 @@ export class VideoController {
               processingStatus: UPLOAD_STATUS.COMPLETED,
             }
           : {};
+      if (req.query.adminVideos && req.user?.role == USER_ROLE.ADMIN) {
+        userFilter.uploadedBy = {
+          id: req.user?.id,
+        };
+      }
+      const categoryFilter: FindOptionsWhere<VideoEntity> = req.query.categoryId
+        ? {
+            category: {
+              id: Number(req.query.categoryId),
+            },
+          }
+        : {};
+
       const videos = await this._videoService.GetAll({
         where: {
           ...userFilter,
-          category: {
-            id: req.query.categoryId,
-          },
+          ...categoryFilter,
         },
         order: {
           createdAt: "DESC",
@@ -102,17 +116,87 @@ export class VideoController {
     }
   };
 
-  GetVideoById = async( req: AuthRequest<GetVideoQueryDto>, res: Response, next: NextFunction) => {
+  GetVideoById = async (
+    req: AuthRequest<GetVideoQueryDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
     try {
-      const video = await this._videoService.GetById(req.params.id, {relations: {
-        category: true,
-        uploadedBy: true,
-        thumbnail: true,
-        video: true
-      }})
-      return responseHandler.success(res,video)
+      const video = await this._videoService.GetById(req.params.id, {
+        relations: {
+          category: true,
+          uploadedBy: true,
+          thumbnail: true,
+          video: true,
+        },
+      });
+      return responseHandler.success(res, video);
     } catch (error) {
-      return next(error)
+      return next(error);
     }
-  }
+  };
+
+  GetDashboardStats = async (
+    _req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const videoRepo = AppDataSource.getRepository(VideoEntity);
+      const userRepo = AppDataSource.getRepository(UserEntity);
+      const categoryRepo = AppDataSource.getRepository(CategoryEntity);
+
+      const [
+        totalVideos,
+        pendingVideos,
+        processingVideos,
+        completedVideos,
+        failedVideos,
+        totalUsers,
+        totalCategories,
+        recentVideos,
+      ] = await Promise.all([
+        videoRepo.count(),
+        videoRepo.count({ where: { processingStatus: UPLOAD_STATUS.PENDING } }),
+        videoRepo.count({
+          where: { processingStatus: UPLOAD_STATUS.PROCESSING },
+        }),
+        videoRepo.count({
+          where: { processingStatus: UPLOAD_STATUS.COMPLETED },
+        }),
+        videoRepo.count({ where: { processingStatus: UPLOAD_STATUS.FAILED } }),
+        userRepo.count(),
+        categoryRepo.count(),
+        videoRepo.find({
+          order: { createdAt: "DESC" },
+          take: 6,
+          relations: { uploadedBy: true, thumbnail: true, category: true },
+          select: {
+            id: true,
+            title: true,
+            processingStatus: true,
+            status: true,
+            createdAt: true,
+            uploadedBy: { id: true, username: true },
+            category: { id: true, name: true },
+          },
+        }),
+      ]);
+
+      return responseHandler.success(res, {
+        videos: {
+          total: totalVideos,
+          pending: pendingVideos,
+          processing: processingVideos,
+          completed: completedVideos,
+          failed: failedVideos,
+        },
+        users: { total: totalUsers },
+        categories: { total: totalCategories },
+        recentVideos,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

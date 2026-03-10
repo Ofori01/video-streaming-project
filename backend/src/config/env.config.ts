@@ -1,3 +1,4 @@
+import { string } from "yup";
 import dotenv from "dotenv";
 import z from "zod";
 
@@ -8,8 +9,20 @@ class Config {
     PORT: z.coerce.number(),
     LOCAL_URL: z.string(),
     JWT_SECRET: z.string(),
-    JWT_EXPIRES_IN: z.string()
-    
+    JWT_EXPIRES_IN: z.string(),
+    DATABASE_HOST: z.string(),
+    DATABASE_PORT: z.coerce.number(),
+    DATABASE: z.string(),
+    DATABASE_USER: z.string(),
+    DATABASE_PASSWORD: z.string(),
+    DATABASE_POOL_MODE: z.string(),
+    AWS_REGION: z.string(),
+    AWS_ACCESS_KEY: z.string(),
+    AWS_SECRET_ACCESS_KEY: z.string(),
+    AWS_BASE_URL: z.string(),
+    AWS_BUCKET: z.string(),
+    NODEMAILER_USER: z.string(),
+    NODEMAILER_USER_PASSWORD: z.string(),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;

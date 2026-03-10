@@ -11,10 +11,10 @@ const categoryRepository = new CategoryRepository();
 const categoryService = new CategoryService(categoryRepository);
 const categoryController = new CategoryController(categoryService);
 
-categoryRoutes.use(authMiddleware.authenticate);
 
 categoryRoutes.post(
   "",
+  authMiddleware.authenticate,
   authMiddleware.authorize(USER_ROLE.ADMIN),
   categoryController.Create
 );

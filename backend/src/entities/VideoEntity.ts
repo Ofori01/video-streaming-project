@@ -1,29 +1,26 @@
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToOne,
-} from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { UPLOAD_STATUS, VIDEO_STATUS } from "../lib/types/common/enums";
 import { BaseEntity } from "./BaseEntity";
 import { FileEntity } from "./FilesEntity";
 import { CategoryEntity } from "./CategoryEntity";
 import { UserEntity } from "./UserEntity";
+import { CommentEntity } from "./CommentEntity";
 
 @Entity()
 export class VideoEntity extends BaseEntity {
   @Column()
   title: string;
 
-  @Column()
+  @Column({
+    length: 1000,
+  })
   description: string;
 
-  @ManyToOne(()=> FileEntity)
-  thumbnail: FileEntity
+  @ManyToOne(() => FileEntity)
+  thumbnail: FileEntity;
 
-  @ManyToOne(()=> FileEntity)
-  video: FileEntity
-  
+  @ManyToOne(() => FileEntity)
+  video: FileEntity;
 
   @ManyToOne(() => CategoryEntity, (category) => category.videos)
   category: CategoryEntity;
@@ -33,16 +30,16 @@ export class VideoEntity extends BaseEntity {
 
   @Column({
     type: "float",
-    nullable: true
+    nullable: true,
   })
   duration: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   processingError: string;
 
   @Column({
     enum: VIDEO_STATUS,
-    default: VIDEO_STATUS.ARCHIVED
+    default: VIDEO_STATUS.ARCHIVED,
   })
   status: VIDEO_STATUS;
 
@@ -51,4 +48,7 @@ export class VideoEntity extends BaseEntity {
     default: UPLOAD_STATUS.PENDING,
   })
   processingStatus: UPLOAD_STATUS;
+
+  @OneToMany(()=> CommentEntity, (comment)=> comment.video)
+  comments: CommentEntity[]
 }

@@ -25,7 +25,7 @@ export abstract class GenericRepository<T extends BaseEntity>
     return await this.repository.find(options);
   }
 
-  async GetById(id: number, options: FindOneOptions<T>): Promise<T> {
+  async GetById(id: number, options?: FindOneOptions<T>): Promise<T> {
     const findOptions = {...options, where: {id: id} } as FindOneOptions<T>;
     return await this.repository.findOneOrFail(findOptions);
   }

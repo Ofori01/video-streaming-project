@@ -20,8 +20,8 @@ export class UserEntity extends BaseEntity {
   username: string;
 
   @Column({
-    length: 20,
     unique: true,
+    nullable: true
   })
   email: string;
 
@@ -34,6 +34,7 @@ export class UserEntity extends BaseEntity {
   @OneToOne(() => FileEntity, {nullable: true})
   @JoinColumn()
   profile_picture_url: FileEntity;
+  
 
   
 }

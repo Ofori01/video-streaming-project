@@ -4,24 +4,82 @@ import { IUserRepository } from "../interfaces/repositories/IUserRepository";
 import CustomError from "../middlewares/errorHandler/errors/CustomError";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { OtpEntity } from "../entities/OtpEntity";
+import { IOtpService } from "../interfaces/services/IOtpService";
+import { IUserRolesRepository } from "../interfaces/repositories/IUserRolesRepository";
+import { USER_ROLE } from "../lib/types/common/enums";
+import { email } from "zod";
+
+interface tokenPayload {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+}
 
 export class AuthService {
-  constructor(private _userRepository: IUserRepository) {}
+  constructor(
+    private _userRepository: IUserRepository,
+    private _otpService: IOtpService,
+    private _userRolesRepository: IUserRolesRepository
+  ) {}
 
-  private generateToken(data: object) {
+  private generateToken(data: tokenPayload) {
     return jwt.sign(data, envConfig.JWT_SECRET, { expiresIn: "30d" });
+  }
+
+  async generateUserToken(userEmail: string) {
+    const user = await this._userRepository.GetOne({
+      where: { email: userEmail },
+      relations: { role: true },
+      select: {
+        role: {
+          id: true,
+          name: true,
+        },
+      },
+    });
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+    const payload = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role?.name ?? "user",
+    };
+    const token = jwt.sign(payload, envConfig.JWT_SECRET, { expiresIn: "2d" });
+    return { token, user: payload };
+  }
+
+  private async generateOtp(userEmail: string) {
+    // generate actual otp code ~ 6 digits
+    const otp = crypto.randomInt(100000, 1000000);
+
+    const expiryTime = 15;
+    const expires = new Date();
+    expires.setMinutes(expires.getMinutes() + expiryTime);
+
+    const newOtp = new OtpEntity();
+    newOtp.userEmail = userEmail;
+    newOtp.otp = otp;
+    newOtp.expiresIn = expires;
+    await this._otpService.Create(newOtp);
+    return { otp: newOtp.otp, expiresIn: expiryTime };
   }
 
   async login(email: string, password: string) {
     const user = await this._userRepository.GetOne({
       where: { email: email },
-      relations: { role: true },select: {
+      relations: { role: true },
+      select: {
         id: true,
         email: true,
         username: true,
-        password: true
-      }
+        password: true,
+      },
     });
 
     if (!user) {
@@ -32,13 +90,113 @@ export class AuthService {
       throw new CustomError("Incorrect password", 400);
     }
     //TODO - use in auth request type instead of userEntity
-    const payload = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: user.role?.name ??  'user'
+
+    const { otp, expiresIn } = await this.generateOtp(user.email);
+    this._otpService.HandleOtpDelivery(user.email, otp.toString(), expiresIn);
+
+    // const payload = {
+    //   id: user.id,
+    //   email: user.email,
+    //   username: user.username,
+    //   role: user.role?.name ??  'user'
+    // }
+    // const token = this.generateToken(payload);
+    return { user: { id: user.id, email: user.email } };
+  }
+
+  async VerifyOtp(otp: number, userEmail: string) {
+    const fetchedOtp = await this._otpService.GetOne({
+      where: { otp: otp, userEmail, isActive: true },
+    });
+    if (!fetchedOtp) {
+      throw new CustomError("Invalid Otp", 400);
     }
-    const token = this.generateToken(payload);
-    return {user, token}
+    // check expiry
+    if (new Date() > fetchedOtp.expiresIn) {
+      throw new CustomError("OTP has expired. Try again later", 400);
+    }
+
+    //otp is accurate
+    fetchedOtp.isActive = false;
+
+    //for first time users -> after signup,
+    const user = await this._userRepository.GetOne({
+      where: { email: userEmail },
+    });
+    if (!user) {
+      throw new CustomError(
+        "An error occurred while trying to verify otp. Try again later"
+      );
+    }
+    
+
+    await this._otpService.Update(fetchedOtp.id, fetchedOtp)
+    
+  }
+
+  async signUp(username: string, password: string, email: string, roleId?: string) {
+    // check existing user
+    const existingUser = await this._userRepository.GetOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new CustomError(
+        "The email already exists, did you mean to log in?",
+        400
+      );
+    }
+
+    // default role to user
+    let userRole
+    if(!roleId){
+      userRole = await this._userRolesRepository.GetOne({
+        where: { name: USER_ROLE.USER },
+      });
+      //if no role -> consider
+      if (!userRole) {
+        throw new CustomError(
+          "An error occurred during sign-up. Try again later"
+        );
+      }
+    }else {
+      userRole = await this._userRolesRepository.GetById(Number(roleId))
+    }
+
+
+
+    const newUser = new UserEntity();
+    newUser.email = email;
+    newUser.password = bcrypt.hashSync(password);
+    newUser.username = username;
+    newUser.role = userRole;
+
+    await this._userRepository.Create(newUser);
+
+    const token = this.generateToken({
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role.name,
+      email: newUser.email,
+    });
+    // Todo: send welcome message
+    return {
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        role: newUser.role.name,
+      },
+      token,
+    };
+  }
+
+
+  async getAvailableRoles(){
+    const roles = await this._userRolesRepository.GetAll({select: {
+      id: true,
+      name: true
+    }})
+    
+    return roles
   }
 }

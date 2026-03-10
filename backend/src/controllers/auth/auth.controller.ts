@@ -1,6 +1,10 @@
 import { AuthService } from "../../services/AuthService";
 import { NextFunction, Request, Response } from "express";
-import { LoginDto } from "../../interfaces/dtos/auth-dtos";
+import {
+  LoginDto,
+  SignUpDto,
+  VerifyOtpDto,
+} from "../../interfaces/dtos/auth-dtos";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 
 export class AuthController {
@@ -12,12 +16,66 @@ export class AuthController {
     next: NextFunction
   ) => {
     try {
-      const { user, token } = await this._authService.login(
+      const { user } = await this._authService.login(
         req.body.email,
         req.body.password
       );
 
-      return responseHandler.success(res, { user, token }, "Login successful");
+      return responseHandler.success(res, user, "Login successful, Verify otp");
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  signUp = async (
+    req: Request<{}, {}, SignUpDto>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { user, token } = await this._authService.signUp(
+        req.body.username,
+        req.body.password,
+        req.body.email,
+        req.body.roleId
+      );
+
+      return responseHandler.success(
+        res,
+        { user, token },
+        "Sign up successful"
+      );
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  verifyOtp = async (
+    req: Request<{}, {}, VerifyOtpDto>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await this._authService.VerifyOtp(req.body.otp, req.body.userEmail);
+
+      const { token, user } = await this._authService.generateUserToken(
+        req.body.userEmail
+      );
+
+      return responseHandler.success(res, { token, user }, "Login successful");
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  availableRoles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const roles = await this._authService.getAvailableRoles();
+      return responseHandler.success(
+        res,
+        roles,
+        "Roles retrieved successfully"
+      );
     } catch (error) {
       return next(error);
     }

@@ -24,7 +24,7 @@ class CustomResponse {
     
     success<T>(
         res: Response,
-        data: T,
+        data?: T,
         message: string = 'Request successful',
         statusCode: number = 200,
         meta?: Record<string, any>
