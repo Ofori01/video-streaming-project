@@ -1,14 +1,17 @@
 import nodemailer from "nodemailer";
 import envConfig from "../config/env.config";
-import { ValidationError   } from "yup";
-import * as yup from 'yup'
+import { ValidationError } from "yup";
+import * as yup from "yup";
 import CustomError from "../middlewares/errorHandler/errors/CustomError";
 class EmailService {
   private transport = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: {
       user: envConfig.NODEMAILER_USER,
-      pass: envConfig.NODEMAILER_USER_PASSWORD
+      pass: envConfig.NODEMAILER_USER_PASSWORD,
     },
   });
   private async validateEmail(email: string) {
@@ -40,7 +43,7 @@ class EmailService {
           } else {
             console.log("Email sent successfully: ", data);
           }
-        }
+        },
       );
     } catch (error) {
       throw error;
@@ -48,5 +51,4 @@ class EmailService {
   }
 }
 
-
-export default new EmailService()
+export default new EmailService();
