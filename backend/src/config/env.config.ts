@@ -20,8 +20,11 @@ class Config {
     AWS_SECRET_ACCESS_KEY: z.string(),
     AWS_BASE_URL: z.string(),
     AWS_BUCKET: z.string(),
-    NODEMAILER_USER: z.string(),
-    NODEMAILER_USER_PASSWORD: z.string(),
+    // Nodemailer (optional — disabled in favour of Resend)
+    NODEMAILER_USER: z.string().optional(),
+    NODEMAILER_USER_PASSWORD: z.string().optional(),
+    // Resend
+    RESEND_API_KEY: z.string(),
     REDIS_URL: z.string().optional(),
     FRONTEND_URL: z.string().default("*"),
   });
