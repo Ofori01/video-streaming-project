@@ -7,7 +7,6 @@ class Config {
 
   private _EnvSchema = z.object({
     PORT: z.coerce.number(),
-    LOCAL_URL: z.string(),
     JWT_SECRET: z.string(),
     JWT_EXPIRES_IN: z.string(),
     DATABASE_HOST: z.string(),
@@ -24,7 +23,7 @@ class Config {
     NODEMAILER_USER: z.string(),
     NODEMAILER_USER_PASSWORD: z.string(),
     REDIS_URL: z.string().optional(),
-    FRONTEND_URL: z.string(),
+    FRONTEND_URL: z.string().default("*"),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;

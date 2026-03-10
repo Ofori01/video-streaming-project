@@ -23,8 +23,8 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: envConfig.FRONTEND_URL,
-    credentials: true,
+    origin: envConfig.FRONTEND_URL === "*" ? "*" : envConfig.FRONTEND_URL,
+    credentials: envConfig.FRONTEND_URL !== "*",
   }),
 );
 app.use(express.urlencoded({ extended: true }));
