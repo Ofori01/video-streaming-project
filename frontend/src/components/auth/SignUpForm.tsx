@@ -94,6 +94,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
             token: response.data.token,
             userId: response.data.user.id,
             role: response.data.user.role,
+            email: response.data.user.email,
+            username: response.data.user.username,
           })
         );
         handleSuccess();
