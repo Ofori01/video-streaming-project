@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: video-streaming-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: LOCAL_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: DATABASE_HOST
+        sync: false
+      - key: DATABASE_PORT
+        sync: false
+      - key: DATABASE
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: DATABASE_POOL_MODE
+        value: session
+      - key: REDIS_URL
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_ACCESS_KEY
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_BASE_URL
+        sync: false
+      - key: AWS_BUCKET
+        sync: false
+      - key: NODEMAILER_USER
+        sync: false
+      - key: NODEMAILER_USER_PASSWORD
+        sync: false

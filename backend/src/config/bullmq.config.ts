@@ -1,9 +1,12 @@
 import { ConnectionOptions } from "bullmq";
+import dotenv from "dotenv";
 
+dotenv.config();
 
-const connection: ConnectionOptions  = {
-    port: 6379,
-    host: "127.0.0.1",
-}
+const redisUrl = process.env.REDIS_URL;
 
-export default connection
+const connection: ConnectionOptions = redisUrl
+  ? { url: redisUrl }
+  : { port: 6379, host: "127.0.0.1" };
+
+export default connection;
