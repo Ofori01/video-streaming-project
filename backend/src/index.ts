@@ -16,12 +16,17 @@ import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import "./jobs/videoUpload";
 import "./jobs/thumbnailUpload";
-import "./jobs/mainFlow"
+import "./jobs/mainFlow";
 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: envConfig.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
@@ -39,7 +44,7 @@ createBullBoard({
   queues: [
     new BullMQAdapter(thumbnailUploadQueue),
     new BullMQAdapter(videoUploadQueue),
-    new BullMQAdapter(mainQueue)
+    new BullMQAdapter(mainQueue),
   ],
   serverAdapter,
 });

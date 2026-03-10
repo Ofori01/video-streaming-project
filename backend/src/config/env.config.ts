@@ -23,6 +23,8 @@ class Config {
     AWS_BUCKET: z.string(),
     NODEMAILER_USER: z.string(),
     NODEMAILER_USER_PASSWORD: z.string(),
+    REDIS_URL: z.string().optional(),
+    FRONTEND_URL: z.string(),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;
@@ -36,7 +38,7 @@ class Config {
     if (!envServer.success) {
       console.error(envServer.error.issues);
       throw new Error(
-        "There was an error with the server environment variables"
+        "There was an error with the server environment variables",
       );
     }
     this._env = envServer.data;
