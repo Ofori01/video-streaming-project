@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import VideoDescriptionCard from "@/components/Videos/VideoDescriptionCard";
 import VideoPlayer from "@/components/Videos/VideoPlayer";
 import RelatedVideosSection from "@/components/Videos/RelatedVideosSection";
+import CommentSection from "@/components/Videos/CommentSection";
 import { useParams } from "react-router-dom";
 import { useGetVideoById } from "@/hooks/queries/useVideoQuerries";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,6 +87,9 @@ const Movie: React.FC = () => {
               description={video.description}
             />
           )}
+
+          {/* comments */}
+          <CommentSection videoId={videoId} />
         </div>
 
         {/* related videos section */}

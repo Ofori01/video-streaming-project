@@ -1,9 +1,4 @@
-import { Get } from "./../../../node_modules/type-fest/source/get.d";
 import { boolean, InferType, mixed, number, object, string } from "yup";
-import { title } from "process";
-
-
-// ...existing code...
 
 const GetAllVideosQuerySchema = object({
   categoryId: string().optional(),

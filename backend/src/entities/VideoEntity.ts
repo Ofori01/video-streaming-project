@@ -1,9 +1,10 @@
-import { Column, Entity, ManyToOne, OneToOne } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { UPLOAD_STATUS, VIDEO_STATUS } from "../lib/types/common/enums";
 import { BaseEntity } from "./BaseEntity";
 import { FileEntity } from "./FilesEntity";
 import { CategoryEntity } from "./CategoryEntity";
 import { UserEntity } from "./UserEntity";
+import { CommentEntity } from "./CommentEntity";
 
 @Entity()
 export class VideoEntity extends BaseEntity {
@@ -47,4 +48,7 @@ export class VideoEntity extends BaseEntity {
     default: UPLOAD_STATUS.PENDING,
   })
   processingStatus: UPLOAD_STATUS;
+
+  @OneToMany(()=> CommentEntity, (comment)=> comment.video)
+  comments: CommentEntity[]
 }

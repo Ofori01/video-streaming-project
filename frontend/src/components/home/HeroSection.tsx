@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import CarouselIndicators from "./CarouselIndicator";
 import bannerImage1 from "../../assets/banner_1.png";
 import { Dot, Play } from "lucide-react";
@@ -38,16 +38,31 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState<number | null>(null);
+  const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const slides: HeroSlide[] =
-    videos.length > 0 ? videos.slice(0, 5).map(mapToSlide) : [];
+  const slides: HeroSlide[] = videos.length > 0 ? videos.slice(0, 5).map(mapToSlide) : [];
+
+  
 
   const current = slides[currentSlide];
 
-  const goToSlide = React.useCallback(
-    (index: number) => setCurrentSlide(index),
-    [],
-  );
+  // console.log(videos[0])
+  const goToSlide = React.useCallback((index: number) => {
+    if (slideTimerRef.current) clearTimeout(slideTimerRef.current);
+    setCurrentSlide((prev) => {
+      setPrevSlide(prev);
+      return index;
+    });
+    slideTimerRef.current = setTimeout(() => setPrevSlide(null), 700);
+  }, []);
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (slideTimerRef.current) clearTimeout(slideTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -80,11 +95,28 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   if (!current) return null;
 
   return (
-    <div
-      className="relative h-screen w-full bg-cover bg-center md:bg-top bg-no-repeat overflow-hidden transition-all ease-linear duration-700"
-      style={{ backgroundImage: `url(${current.backgroundImage})` }}
-    >
-      <div className="relative flex flex-col gap-y-3 md:gap-y-3 lg:gap-y-4 top-[20vh] md:top-[20vh] lg:top-[30vh] ml-10 p-5 h-[115vh] md:h-[110vh] lg:h-[105vh]">
+    <div className="relative h-screen w-full overflow-hidden">
+      {/* Exiting slide — slides out to the left */}
+      {prevSlide !== null && slides[prevSlide] && (
+        <div
+          key={`prev-${prevSlide}`}
+          className="absolute inset-0 bg-cover bg-center md:bg-top bg-no-repeat animate-slide-out"
+          style={{
+            backgroundImage: `url(${slides[prevSlide].backgroundImage})`,
+          }}
+        />
+      )}
+      {/* Entering slide — slides in from the right */}
+      <div
+        key={`current-${currentSlide}`}
+        className={`absolute inset-0 bg-cover bg-center md:bg-top bg-no-repeat${
+          prevSlide !== null ? " animate-slide-in" : ""
+        }`}
+        style={{ backgroundImage: `url(${current.backgroundImage})` }}
+      />
+
+      {/* Content — sits above both background layers but below indicators */}
+      <div className="relative z-20 flex flex-col gap-y-3 md:gap-y-3 lg:gap-y-4 top-[20vh] md:top-[20vh] lg:top-[30vh] ml-10 p-5 h-[115vh] md:h-[110vh] lg:h-[105vh]">
         {/* categories */}
         <div className="flex flex-row gap-x-2 shrink-0">
           {current.categories.map((category, index) => (
@@ -101,7 +133,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           {current.title}
         </h3>
 
-        <span className="inline-flex items-center uppercase text-sm md:text-base lg:text-lg font-body shrink-0">
+        <span className="inline-flex items-center uppercase text-sm md:text-base lg:text-lg font-body text-white shrink-0">
           <Dot size={32} className="md:w-12 md:h-12" />
           {current.description}
         </span>
@@ -123,9 +155,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      <div className="absolute inset-0 bg-linear-to-b from-transparent from-70% via-transparent to-black pointer-events-none" />
+      <div className="absolute inset-0 z-10 bg-linear-to-b from-transparent from-70% via-transparent to-black pointer-events-none" />
       <CarouselIndicators
-        className="mx-auto z-100 absolute bottom-12 left-15 right-0"
+        className="mx-auto z-30 absolute bottom-12 left-15 right-0"
         count={slides.length}
         current={currentSlide}
         onIndicatorClick={goToSlide}
