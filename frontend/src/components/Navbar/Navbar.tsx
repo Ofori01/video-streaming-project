@@ -77,9 +77,11 @@ const Navbar: React.FC = () => {
       {!isMobile && (
         <div className="flex flex-row items-center justify-center gap-x-5 text-secondary ">
           {/* creators button */}
-          <StarBorder as="button" color="#e7000b" speed="5s" thickness={4}>
-            Create
-          </StarBorder>
+          <NavLink to="/admin">
+            <StarBorder as="button" color="#e7000b" speed="10s" thickness={4}>
+              Create Content
+            </StarBorder>
+          </NavLink>
           {/* auth buttons and search icon */}
           <AuthButtons />
           <button>
