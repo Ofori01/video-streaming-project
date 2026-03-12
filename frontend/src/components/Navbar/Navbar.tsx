@@ -12,7 +12,7 @@ import { Menu, Search, X } from "lucide-react";
 import AuthButtons from "./AuthButtons";
 import StarBorder from "../StarBorder";
 import { useSelector } from "react-redux";
-import type { authState } from "@/store/auth/authSlice";
+import type { RootState } from "@/store/store";
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -21,9 +21,8 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const location = useLocation();
   const isAuthenticated = useSelector(
-    (state: authState) => state.isAuthenticated,
+    (state: RootState) => state.auth.isAuthenticated,
   );
-
   return (
     <nav className="inline-flex md:mx-10 p-5 pd-md-10 align-center justify-between  bg-transparent absolute left-0 right-0 z-100">
       <Link
@@ -82,6 +81,7 @@ const Navbar: React.FC = () => {
       {!isMobile && (
         <div className="flex flex-row items-center justify-center gap-x-5 text-secondary ">
           {/* creators button */}
+
           {isAuthenticated && (
             <NavLink to="/admin">
               <StarBorder as="button" color="#e7000b" speed="10s" thickness={4}>
