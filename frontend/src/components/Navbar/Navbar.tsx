@@ -10,6 +10,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, Search, X } from "lucide-react";
 import AuthButtons from "./AuthButtons";
+import StarBorder from "../StarBorder";
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -75,7 +76,11 @@ const Navbar: React.FC = () => {
       {/* Login/Logout */}
       {!isMobile && (
         <div className="flex flex-row items-center justify-center gap-x-5 text-secondary ">
-          {/* notification and search icon */}
+          {/* creators button */}
+          <StarBorder as="button" color="#e7000b" speed="5s" thickness={4}>
+            Create
+          </StarBorder>
+          {/* auth buttons and search icon */}
           <AuthButtons />
           <button>
             <Search />
