@@ -8,6 +8,7 @@ import { FILE_TYPE } from "../lib/types/common/enums";
 import { VideoRepository } from "../repositories/VideoRepository";
 import connection from "../config/bullmq.config";
 import SseManager from "../lib/sse/SseManager";
+import { applyFastStart } from "../lib/ffmpeg/fastStartProcessor";
 
 const videoUploadWorker = new Worker<videoUploadJobPayload>(
   videoUploadQueueName,
@@ -16,13 +17,18 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
     const videoIdStr = String(videoId);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 20000));
-
       const storageService = new S3StorageService();
       console.log("Uploading video in job");
 
+      // Apply faststart optimization (moov atom at front)
+      let videoBufferToUpload = Buffer.from(videoBuffer, "base64");
+      if (mimeType === "video/mp4" || key.endsWith(".mp4")) {
+        const processed = await applyFastStart(videoBufferToUpload, key);
+        videoBufferToUpload = Buffer.from(processed);
+      }
+
       const video = await storageService.upload({
-        body: Buffer.from(videoBuffer, "base64"),
+        body: videoBufferToUpload,
         key: key,
         contentType: mimeType,
         metaData: {
@@ -67,4 +73,3 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
 );
 
 export default videoUploadWorker;
-

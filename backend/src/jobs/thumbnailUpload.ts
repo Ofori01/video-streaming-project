@@ -15,7 +15,6 @@ const thumbnailUploadWorker = new Worker<thumbnailUploadJobPayload>(
     const name = job.name
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 20000));
 
       const storageService = new S3StorageService();
       console.log("Uploading thumbnail in job");
