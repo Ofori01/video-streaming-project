@@ -3,7 +3,7 @@ services:
     name: video-streaming-backend
     runtime: node
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && npm run setup
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -39,6 +39,8 @@ services:
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
       - key: AWS_BASE_URL
+        sync: false
+      - key: AWS_CDN_BASE_URL
         sync: false
       - key: AWS_BUCKET
         sync: false
