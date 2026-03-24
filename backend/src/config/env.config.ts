@@ -19,6 +19,7 @@ class Config {
     AWS_ACCESS_KEY: z.string(),
     AWS_SECRET_ACCESS_KEY: z.string(),
     AWS_BASE_URL: z.string(),
+    AWS_CDN_BASE_URL: z.string().optional(),
     AWS_BUCKET: z.string(),
     // Nodemailer (optional — disabled in favour of Resend)
     NODEMAILER_USER: z.string().optional(),
