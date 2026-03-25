@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
-import { getSupabaseClient } from "@/lib/supabase";
+import GoogleAuthOption from "./GoogleAuthOption";
 
 const formSchema = z.object({
   email: z.email("Please enter a valid email address."),
@@ -70,34 +70,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
       },
     });
   }
-
-  const onGoogleSignIn = async () => {
-    try {
-      const supabase = getSupabaseClient();
-      const redirectTo = `${window.location.origin}/auth/callback`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to start Google sign in",
-      );
-    }
-  };
 
   return (
     <Card className="w-full sm:max-w-md">
@@ -195,9 +167,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
               Sign In
             </Button>
           </Field>
-          <Button type="button" variant="secondary" onClick={onGoogleSignIn}>
-            Continue With Google
-          </Button>
+          <GoogleAuthOption mode="signin" />
         </div>
       </CardFooter>
     </Card>

@@ -49,7 +49,7 @@ const AuthCallback = () => {
           }),
         );
 
-        toast.success(response.message || "Google login successful");
+        toast.success(response.message || "login successful");
 
         if (response.data.user.role === USER_ROLE.ADMIN) {
           navigate("/admin", { replace: true, viewTransition: true });
