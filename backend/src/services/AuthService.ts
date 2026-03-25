@@ -11,6 +11,7 @@ import { IOtpService } from "../interfaces/services/IOtpService";
 import { IUserRolesRepository } from "../interfaces/repositories/IUserRolesRepository";
 import { USER_ROLE } from "../lib/types/common/enums";
 import { email } from "zod";
+import { getSupabaseServerClient } from "../lib/supabase/supabaseClient";
 
 interface tokenPayload {
   id: number;
@@ -23,8 +24,27 @@ export class AuthService {
   constructor(
     private _userRepository: IUserRepository,
     private _otpService: IOtpService,
-    private _userRolesRepository: IUserRolesRepository
+    private _userRolesRepository: IUserRolesRepository,
   ) {}
+
+  private async generateUniqueUsername(preferredName: string) {
+    const sanitize = (value: string) => value.replace(/[^a-zA-Z0-9_]/g, "");
+    const base =
+      sanitize(preferredName).slice(0, 10) ||
+      `user${crypto.randomInt(1000, 9999)}`;
+
+    let candidate = base;
+    let counter = 1;
+
+    while (
+      await this._userRepository.GetOne({ where: { username: candidate } })
+    ) {
+      const suffix = String(counter++);
+      candidate = `${base.slice(0, Math.max(1, 10 - suffix.length))}${suffix}`;
+    }
+
+    return candidate;
+  }
 
   private generateToken(data: tokenPayload) {
     return jwt.sign(data, envConfig.JWT_SECRET, { expiresIn: "30d" });
@@ -104,6 +124,57 @@ export class AuthService {
     return { user: { id: user.id, email: user.email } };
   }
 
+  async loginWithGoogle(accessToken: string) {
+    const supabase = getSupabaseServerClient();
+    const { data, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !data.user) {
+      throw new CustomError("Invalid Google auth session", 401);
+    }
+
+    const supabaseUser = data.user;
+    const email = supabaseUser.email;
+
+    if (!email) {
+      throw new CustomError("Google account email is required", 400);
+    }
+
+    let user = await this._userRepository.GetOne({
+      where: { email },
+      relations: { role: true },
+    });
+
+    if (!user) {
+      const defaultRole = await this._userRolesRepository.GetOne({
+        where: { name: USER_ROLE.USER },
+      });
+
+      if (!defaultRole) {
+        throw new CustomError("Default user role is not configured", 500);
+      }
+
+      const preferredName =
+        supabaseUser.user_metadata?.user_name ||
+        supabaseUser.user_metadata?.name ||
+        email.split("@")[0] ||
+        "user";
+
+      const username = await this.generateUniqueUsername(preferredName);
+
+      const newUser = new UserEntity();
+      newUser.email = email;
+      newUser.username = username;
+      newUser.password = bcrypt.hashSync(crypto.randomUUID(), 10);
+      newUser.role = defaultRole;
+
+      user = await this._userRepository.Create(newUser);
+    }
+
+    const { token, user: appUser } = await this.generateUserToken(email);
+
+    return { token, user: appUser };
+  }
+
   async VerifyOtp(otp: number, userEmail: string) {
     const fetchedOtp = await this._otpService.GetOne({
       where: { otp: otp, userEmail, isActive: true },
@@ -125,16 +196,19 @@ export class AuthService {
     });
     if (!user) {
       throw new CustomError(
-        "An error occurred while trying to verify otp. Try again later"
+        "An error occurred while trying to verify otp. Try again later",
       );
     }
-    
 
-    await this._otpService.Update(fetchedOtp.id, fetchedOtp)
-    
+    await this._otpService.Update(fetchedOtp.id, fetchedOtp);
   }
 
-  async signUp(username: string, password: string, email: string, roleId?: string) {
+  async signUp(
+    username: string,
+    password: string,
+    email: string,
+    roleId?: string,
+  ) {
     // check existing user
     const existingUser = await this._userRepository.GetOne({
       where: { email },
@@ -142,27 +216,25 @@ export class AuthService {
     if (existingUser) {
       throw new CustomError(
         "The email already exists, did you mean to log in?",
-        400
+        400,
       );
     }
 
     // default role to user
-    let userRole
-    if(!roleId){
+    let userRole;
+    if (!roleId) {
       userRole = await this._userRolesRepository.GetOne({
         where: { name: USER_ROLE.USER },
       });
       //if no role -> consider
       if (!userRole) {
         throw new CustomError(
-          "An error occurred during sign-up. Try again later"
+          "An error occurred during sign-up. Try again later",
         );
       }
-    }else {
-      userRole = await this._userRolesRepository.GetById(Number(roleId))
+    } else {
+      userRole = await this._userRolesRepository.GetById(Number(roleId));
     }
-
-
 
     const newUser = new UserEntity();
     newUser.email = email;
@@ -190,13 +262,14 @@ export class AuthService {
     };
   }
 
+  async getAvailableRoles() {
+    const roles = await this._userRolesRepository.GetAll({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
-  async getAvailableRoles(){
-    const roles = await this._userRolesRepository.GetAll({select: {
-      id: true,
-      name: true
-    }})
-    
-    return roles
+    return roles;
   }
 }

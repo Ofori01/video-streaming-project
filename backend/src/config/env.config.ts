@@ -26,6 +26,8 @@ class Config {
     NODEMAILER_USER_PASSWORD: z.string().optional(),
     // Resend
     RESEND_API_KEY: z.string(),
+    SUPABASE_URL: z.string().optional(),
+    SUPABASE_ANON_KEY: z.string().optional(),
     REDIS_URL: z.string().optional(),
     FRONTEND_URL: z.string().default("*"),
   });

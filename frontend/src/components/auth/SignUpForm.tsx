@@ -36,6 +36,7 @@ import { useSignUp } from "@/hooks/mutations/useAuthMutations";
 import { useGetAvailableRoles } from "@/hooks/queries/useAuthQuerries";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const formSchema = Yup.object().shape({
   username: Yup.string()
@@ -113,6 +114,34 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
       },
     });
   }
+
+  const onGoogleSignIn = async () => {
+    try {
+      const supabase = getSupabaseClient();
+      const redirectTo = `${window.location.origin}/auth/callback`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to start Google sign in",
+      );
+    }
+  };
 
   const { handleSubmit, touched, errors, handleChange, handleBlur, values } =
     form;
@@ -312,20 +341,25 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => form.resetForm()}
-            disabled={isPending}
-          >
-            Reset
+        <div className="w-full flex flex-col gap-3">
+          <Field orientation="horizontal">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => form.resetForm()}
+              disabled={isPending}
+            >
+              Reset
+            </Button>
+            <Button type="submit" form="signup-form" disabled={isPending}>
+              {isPending && <Spinner />}
+              Create Account
+            </Button>
+          </Field>
+          <Button type="button" variant="secondary" onClick={onGoogleSignIn}>
+            Continue With Google
           </Button>
-          <Button type="submit" form="signup-form" disabled={isPending}>
-            {isPending && <Spinner />}
-            Create Account
-          </Button>
-        </Field>
+        </div>
       </CardFooter>
     </Card>
   );

@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Spinner } from "../ui/spinner";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const formSchema = z.object({
   email: z.email("Please enter a valid email address."),
@@ -35,12 +36,11 @@ const formSchema = z.object({
     .max(100, "Password must be at most 100 characters."),
 });
 
-
 interface LoginFormProps {
-  handleSuccess: (email: string)=> void
+  handleSuccess: (email: string) => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
+export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const { mutate: login, isPending } = useLogin();
@@ -60,7 +60,7 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
         toast.success(response.message, {
           position: "top-right",
         });
-        handleSuccess(response.data.email)
+        handleSuccess(response.data.email);
       },
       onError: (err) => {
         console.log(err);
@@ -70,6 +70,34 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
       },
     });
   }
+
+  const onGoogleSignIn = async () => {
+    try {
+      const supabase = getSupabaseClient();
+      const redirectTo = `${window.location.origin}/auth/callback`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to start Google sign in",
+      );
+    }
+  };
 
   return (
     <Card className="w-full sm:max-w-md">
@@ -153,16 +181,25 @@ export const LoginForm: React.FC<LoginFormProps> =({handleSuccess})=> {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Reset
+        <div className="w-full flex flex-col gap-3">
+          <Field orientation="horizontal">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => form.reset()}
+            >
+              Reset
+            </Button>
+            <Button type="submit" form="form-rhf-demo" disabled={isPending}>
+              {isPending && <Spinner />}
+              Sign In
+            </Button>
+          </Field>
+          <Button type="button" variant="secondary" onClick={onGoogleSignIn}>
+            Continue With Google
           </Button>
-          <Button type="submit" form="form-rhf-demo" disabled={isPending}>
-            {isPending && <Spinner />}
-            Sign In
-          </Button>
-        </Field>
+        </div>
       </CardFooter>
     </Card>
   );
-}
+};

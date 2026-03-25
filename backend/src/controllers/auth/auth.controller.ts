@@ -1,6 +1,7 @@
 import { AuthService } from "../../services/AuthService";
 import { NextFunction, Request, Response } from "express";
 import {
+  GoogleExchangeDto,
   LoginDto,
   SignUpDto,
   VerifyOtpDto,
@@ -13,12 +14,12 @@ export class AuthController {
   login = async (
     req: Request<{}, {}, LoginDto>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const { user } = await this._authService.login(
         req.body.email,
-        req.body.password
+        req.body.password,
       );
 
       return responseHandler.success(res, user, "Login successful, Verify otp");
@@ -30,20 +31,20 @@ export class AuthController {
   signUp = async (
     req: Request<{}, {}, SignUpDto>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const { user, token } = await this._authService.signUp(
         req.body.username,
         req.body.password,
         req.body.email,
-        req.body.roleId
+        req.body.roleId,
       );
 
       return responseHandler.success(
         res,
         { user, token },
-        "Sign up successful"
+        "Sign up successful",
       );
     } catch (error) {
       return next(error);
@@ -53,16 +54,36 @@ export class AuthController {
   verifyOtp = async (
     req: Request<{}, {}, VerifyOtpDto>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       await this._authService.VerifyOtp(req.body.otp, req.body.userEmail);
 
       const { token, user } = await this._authService.generateUserToken(
-        req.body.userEmail
+        req.body.userEmail,
       );
 
       return responseHandler.success(res, { token, user }, "Login successful");
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  googleExchange = async (
+    req: Request<{}, {}, GoogleExchangeDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { token, user } = await this._authService.loginWithGoogle(
+        req.body.accessToken,
+      );
+
+      return responseHandler.success(
+        res,
+        { token, user },
+        "Google login successful",
+      );
     } catch (error) {
       return next(error);
     }
@@ -74,7 +95,7 @@ export class AuthController {
       return responseHandler.success(
         res,
         roles,
-        "Roles retrieved successfully"
+        "Roles retrieved successfully",
       );
     } catch (error) {
       return next(error);

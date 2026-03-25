@@ -1,5 +1,10 @@
 import authService from "@/backend/auth.Service";
-import type { LoginDto, SignUpDto, VerifyOtpDto } from "@/types/dtos/auth";
+import type {
+  GoogleExchangeDto,
+  LoginDto,
+  SignUpDto,
+  VerifyOtpDto,
+} from "@/types/dtos/auth";
 import type { ApiErrorResponse } from "@/types/errors";
 import { useMutation } from "@tanstack/react-query";
 
@@ -9,33 +14,44 @@ interface LoginCredentials {
 }
 
 interface VerifyOtpCredentials {
-  email: string
-  otp: string
+  email: string;
+  otp: string;
 }
 interface SignUpCredentials {
   email: string;
   password: string;
   username: string;
-  role?: string
+  role?: string;
 }
 
 export const useLogin = () => {
   return useMutation<LoginDto, ApiErrorResponse, LoginCredentials>({
-    mutationFn: (credentials) => authService.login(credentials.email, credentials.password)
-  }
-);
+    mutationFn: (credentials) =>
+      authService.login(credentials.email, credentials.password),
+  });
 };
 
 export const useSignUp = () => {
-  return useMutation<SignUpDto, ApiErrorResponse,SignUpCredentials>({
-    mutationFn: (userData) => authService.signUp(userData.email,userData.username,userData.password, userData.role)
-  })
-}
-
-
+  return useMutation<SignUpDto, ApiErrorResponse, SignUpCredentials>({
+    mutationFn: (userData) =>
+      authService.signUp(
+        userData.email,
+        userData.username,
+        userData.password,
+        userData.role,
+      ),
+  });
+};
 
 export const useVerifyOtp = () => {
-  return useMutation<VerifyOtpDto,ApiErrorResponse,VerifyOtpCredentials>({
-    mutationFn: (credentials)=> authService.verifyOtp(credentials.email, credentials.otp)
-  })
-}
+  return useMutation<VerifyOtpDto, ApiErrorResponse, VerifyOtpCredentials>({
+    mutationFn: (credentials) =>
+      authService.verifyOtp(credentials.email, credentials.otp),
+  });
+};
+
+export const useGoogleExchange = () => {
+  return useMutation<GoogleExchangeDto, ApiErrorResponse, string>({
+    mutationFn: (accessToken) => authService.googleExchange(accessToken),
+  });
+};
