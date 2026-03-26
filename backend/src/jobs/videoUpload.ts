@@ -49,6 +49,8 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
         percent: 70,
       });
 
+
+
       const video = await storageService.upload({
         body: videoBufferToUpload,
         key: key,
@@ -67,6 +69,8 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
           });
         },
       });
+
+
 
       const fileRepo = new FileRepository();
       const videoRepo = new VideoRepository();
