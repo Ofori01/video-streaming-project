@@ -28,6 +28,7 @@ interface AvailableRolesResponseData {
   name: string;
 }
 
+export type GoogleExchangeDto = ApiSuccessResponse<VerifyOtpResponseData>;
 export type SignUpDto = ApiSuccessResponse<signUpResponseData>;
 export type VerifyOtpDto = ApiSuccessResponse<VerifyOtpResponseData>;
 export type LoginDto = ApiSuccessResponse<loginResponseData>;

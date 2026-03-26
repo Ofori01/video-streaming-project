@@ -3,6 +3,7 @@ export const endpoints = {
   login: "/auth/login",
   verifyOtp: "/auth/verify-otp",
   signUp: "/auth/sign-up",
+  googleExchange: "/auth/google/exchange",
   availableRoles: "auth/roles",
 
   // videos

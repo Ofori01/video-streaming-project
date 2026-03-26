@@ -36,6 +36,7 @@ import { useSignUp } from "@/hooks/mutations/useAuthMutations";
 import { useGetAvailableRoles } from "@/hooks/queries/useAuthQuerries";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
+import GoogleAuthOption from "./GoogleAuthOption";
 
 const formSchema = Yup.object().shape({
   username: Yup.string()
@@ -312,20 +313,23 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => form.resetForm()}
-            disabled={isPending}
-          >
-            Reset
-          </Button>
-          <Button type="submit" form="signup-form" disabled={isPending}>
-            {isPending && <Spinner />}
-            Create Account
-          </Button>
-        </Field>
+        <div className="w-full flex flex-col gap-3">
+          <Field orientation="horizontal">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => form.resetForm()}
+              disabled={isPending}
+            >
+              Reset
+            </Button>
+            <Button type="submit" form="signup-form" disabled={isPending}>
+              {isPending && <Spinner />}
+              Create Account
+            </Button>
+          </Field>
+          <GoogleAuthOption mode="signup" />
+        </div>
       </CardFooter>
     </Card>
   );
