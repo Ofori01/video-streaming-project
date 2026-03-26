@@ -67,6 +67,7 @@ const statusBadge = (status: UPLOAD_STATUS) => {
 };
 
 const AdminVideoCard: React.FC<AdminVideoCardProps> = ({
+  id,
   processingStatus,
   thumbnail,
   duration = "30 minutes",
