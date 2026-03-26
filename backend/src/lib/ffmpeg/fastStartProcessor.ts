@@ -6,6 +6,18 @@ import * as os from "os";
 
 const execFileAsync = promisify(execFile);
 
+const MB = 1024 * 1024;
+
+function calculateFastStartTimeoutMs(fileSizeBytes: number): number {
+  const minTimeoutMs = 30_000;
+  const maxTimeoutMs = 8 * 60_000;
+  const sizeInMb = fileSizeBytes / MB;
+
+  // Base + size-based buffer so larger files do not prematurely fall back.
+  const estimatedTimeoutMs = Math.round(minTimeoutMs + sizeInMb * 120);
+  return Math.min(maxTimeoutMs, Math.max(minTimeoutMs, estimatedTimeoutMs));
+}
+
 /**
  * Process video with ffmpeg to apply faststart optimization.
  * Moves moov atom to beginning of file for faster streaming startup.
@@ -16,6 +28,8 @@ export async function applyFastStart(
   originalKey: string,
 ): Promise<Buffer> {
   try {
+    const timeoutMs = calculateFastStartTimeoutMs(videoBuffer.length);
+
     // Create temp files in OS temp directory
     const tempDir = os.tmpdir();
     const inputPath = path.join(
@@ -46,7 +60,7 @@ export async function applyFastStart(
           outputPath,
         ],
         {
-          timeout: 30000, // 30s timeout per video
+          timeout: timeoutMs,
           maxBuffer: 100 * 1024 * 1024, // 100MB buffer for large videos
         },
       );
@@ -72,7 +86,7 @@ export async function applyFastStart(
       ]);
 
       console.warn(
-        `[faststart] ffmpeg processing failed for ${originalKey}, using original:`,
+        `[faststart] ffmpeg processing failed for ${originalKey} (timeout ${timeoutMs}ms), using original:`,
         ffmpegError,
       );
       return videoBuffer; // fallback to original

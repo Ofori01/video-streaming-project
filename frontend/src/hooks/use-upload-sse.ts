@@ -10,10 +10,17 @@ interface UploadProgressData {
   total?: number;
 }
 
+interface UploadStageData {
+  stage: string;
+  message?: string;
+  percent?: number;
+}
+
 interface UseUploadSSEReturn {
   percent: number;
   status: UploadSSEStatus;
   error: string | null;
+  stageMessage: string | null;
   disconnect: () => void;
 }
 
@@ -38,6 +45,7 @@ function useUploadSSE(
   const [percent, setPercent] = useState(0);
   const [status, setStatus] = useState<UploadSSEStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [stageMessage, setStageMessage] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
@@ -82,6 +90,7 @@ function useUploadSSE(
 
         if (!mounted.current) return;
         setStatus("uploading");
+        setStageMessage("Waiting for worker...");
         retryCountRef.current = 0;
 
         const reader = response.body.getReader();
@@ -124,15 +133,27 @@ function useUploadSSE(
               if (eventType === "upload-progress") {
                 const data = parsed as UploadProgressData;
                 setPercent(data.percent);
+              } else if (eventType === "upload-stage") {
+                const data = parsed as UploadStageData;
+                if (typeof data.percent === "number") {
+                  setPercent(Math.max(0, Math.min(100, data.percent)));
+                }
+                if (data.message) {
+                  setStageMessage(data.message);
+                } else if (data.stage) {
+                  setStageMessage(data.stage);
+                }
               } else if (eventType === "upload-complete") {
                 setPercent(100);
                 setStatus("complete");
+                setStageMessage("Processing complete");
                 disconnect();
                 onComplete?.();
                 return;
               } else if (eventType === "upload-error") {
                 setError(parsed.message ?? "Upload failed");
                 setStatus("error");
+                setStageMessage(null);
                 disconnect();
                 return;
               }
@@ -171,6 +192,7 @@ function useUploadSSE(
     retryCountRef.current = 0;
     setPercent(0);
     setError(null);
+    setStageMessage(null);
 
     connect(videoId, mounted);
 
@@ -180,7 +202,7 @@ function useUploadSSE(
     };
   }, [videoId, connect, disconnect]);
 
-  return { percent, status, error, disconnect };
+  return { percent, status, error, stageMessage, disconnect };
 }
 
 export default useUploadSSE;
