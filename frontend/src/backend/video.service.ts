@@ -1,11 +1,16 @@
+import axios from "axios";
 import type { IDashboardStats, IVideo } from "@/types/Videos";
 import backendService from "./api.service";
 import { endpoints } from "./constants";
 import type {
+  CreateUploadSessionDto,
+  CreateUploadSessionRequestDto,
+  FinalizeVideoUploadRequestDto,
   GetAllVideoCategories,
   GetAllVideosDto,
   GetDashboardStatsDto,
   GetVideoDto,
+  PresignedPostData,
 } from "@/types/dtos/videos";
 import type { VideoFilters } from "@/hooks/queries/useVideoQuerries";
 
@@ -13,16 +18,58 @@ import type { VideoFilters } from "@/hooks/queries/useVideoQuerries";
 
 class VideoService {
   async getAllVideos(filters?: VideoFilters): Promise<IVideo[]> {
+    const useAdminEndpoint = Boolean(filters?.adminVideos);
+    const endpoint = useAdminEndpoint
+      ? endpoints.getAllVideosAdmin
+      : endpoints.getAllVideos;
+
+    const queryFilters = useAdminEndpoint
+      ? filters
+      : (({ adminVideos, ...rest }) => rest)(filters ?? {});
+
     const response = await backendService.get<GetAllVideosDto>(
-      endpoints.getAllVideos,
+      endpoint,
       {
-        params: filters,
+        params: queryFilters,
       },
     );
     return response.data.data;
   }
 
-  async uploadVideo(videoData: FormData): Promise<IVideo> {
+  async createUploadSession(
+    payload: CreateUploadSessionRequestDto,
+  ): Promise<CreateUploadSessionDto["data"]> {
+    const response = await backendService.post<CreateUploadSessionDto>(
+      endpoints.createUploadSession,
+      payload,
+    );
+
+    return response.data.data;
+  }
+
+  async uploadFileToS3(
+    presignedPostData: PresignedPostData,
+    file: File,
+    onProgress?: (percent: number) => void,
+  ): Promise<void> {
+    const formData = new FormData();
+    for (const [field, value] of Object.entries(presignedPostData.fields)) {
+      formData.append(field, value);
+    }
+    formData.append("file", file);
+
+    await axios.post(presignedPostData.url, formData, {
+      onUploadProgress(progressEvent) {
+        if (!onProgress || !progressEvent.total) {
+          return;
+        }
+        const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        onProgress(percent);
+      },
+    });
+  }
+
+  async uploadVideo(videoData: FinalizeVideoUploadRequestDto): Promise<IVideo> {
     const response = await backendService.post<GetVideoDto>(
       endpoints.createVideo,
       videoData,
@@ -48,6 +95,10 @@ class VideoService {
       endpoints.getVideo(id),
     );
     return response.data.data;
+  }
+
+  async deleteVideo(id: number): Promise<void> {
+    await backendService.delete(endpoints.deleteVideo(id));
   }
 }
 

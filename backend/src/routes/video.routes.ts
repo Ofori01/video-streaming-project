@@ -4,10 +4,10 @@ import authMiddleware from "../middlewares/auth/auth.middleware";
 import { VideoController } from "../controllers/video/video.controller";
 import { VideoService } from "../services/VideoService";
 import { USER_ROLE } from "../lib/types/common/enums";
-import { fileHandler } from "../middlewares/fileHandler/fileHandler";
 import { validate } from "../middlewares/validation/validation";
 import {
-  CreateVideoSchema,
+  CreateUploadSessionSchema,
+  FinalizeUploadSessionSchema,
   GetAllVideosValidationSchema,
   GetVideoSchema,
 } from "../interfaces/dtos/video-dtos";
@@ -52,11 +52,18 @@ const videoController = new VideoController(videoService);
  *         $ref: '#/components/responses/ServerError'
  */
 videoRoutes.post(
+  "/upload-session",
+  authMiddleware.authenticate,
+  authMiddleware.authorize(USER_ROLE.ADMIN),
+  validate(CreateUploadSessionSchema),
+  videoController.CreateUploadSession,
+);
+
+videoRoutes.post(
   "",
   authMiddleware.authenticate,
   authMiddleware.authorize(USER_ROLE.ADMIN),
-  fileHandler,
-  validate(CreateVideoSchema),
+  validate(FinalizeUploadSessionSchema),
   videoController.CreateVideo,
 );
 
@@ -85,6 +92,14 @@ videoRoutes.get(
   authMiddleware.authenticate,
   authMiddleware.authorize(USER_ROLE.ADMIN),
   videoController.GetDashboardStats,
+);
+
+videoRoutes.get(
+  "/admin",
+  authMiddleware.authenticate,
+  authMiddleware.authorize(USER_ROLE.ADMIN),
+  validate(GetAllVideosValidationSchema),
+  videoController.GetAllVideosAdmin,
 );
 
 videoRoutes.get(
@@ -126,5 +141,13 @@ videoRoutes.get(
  *         $ref: '#/components/responses/ServerError'
  */
 videoRoutes.get("/:id", validate(GetVideoSchema), videoController.GetVideoById);
+
+videoRoutes.delete(
+  "/:id",
+  authMiddleware.authenticate,
+  authMiddleware.authorize(USER_ROLE.ADMIN),
+  validate(GetVideoSchema),
+  videoController.DeleteVideo,
+);
 
 export default videoRoutes;
