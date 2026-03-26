@@ -5,9 +5,19 @@ interface SseClient {
   heartbeatInterval: ReturnType<typeof setInterval>;
 }
 
+interface LastVideoEvent {
+  eventType: string;
+  data: unknown;
+  updatedAt: number;
+}
+
+const TERMINAL_EVENTS = new Set(["upload-complete", "upload-error"]);
+const LAST_EVENT_TTL_MS = 15 * 60 * 1000;
+
 class SseManager {
   private static _instance: SseManager;
   private _clients: Map<string, SseClient> = new Map();
+  private _lastVideoEvent: Map<string, LastVideoEvent> = new Map();
 
   private constructor() {}
 
@@ -48,7 +58,42 @@ class SseManager {
     }, 30_000);
 
     this._clients.set(videoId, { res, heartbeatInterval });
-    console.log(`[SSE] Client connected for videoId=${videoId}. Total: ${this._clients.size}`);
+
+    // Replay the latest known progress for late subscribers.
+    this.replayLastEvent(videoId);
+
+    console.log(
+      `[SSE] Client connected for videoId=${videoId}. Total: ${this._clients.size}`,
+    );
+  }
+
+  private replayLastEvent(videoId: string): void {
+    const last = this._lastVideoEvent.get(videoId);
+    if (!last) {
+      return;
+    }
+
+    // Ignore stale entries.
+    if (Date.now() - last.updatedAt > LAST_EVENT_TTL_MS) {
+      this._lastVideoEvent.delete(videoId);
+      return;
+    }
+
+    const client = this._clients.get(videoId);
+    if (!client) {
+      return;
+    }
+
+    try {
+      const message = `event: ${last.eventType}\ndata: ${JSON.stringify(last.data)}\n\n`;
+      client.res.write(message);
+    } catch (err) {
+      console.error(
+        `[SSE] Failed to replay event for videoId=${videoId}:`,
+        err,
+      );
+      this.removeClient(videoId);
+    }
   }
 
   /**
@@ -59,7 +104,9 @@ class SseManager {
     if (client) {
       clearInterval(client.heartbeatInterval);
       this._clients.delete(videoId);
-      console.log(`[SSE] Client disconnected for videoId=${videoId}. Total: ${this._clients.size}`);
+      console.log(
+        `[SSE] Client disconnected for videoId=${videoId}. Total: ${this._clients.size}`,
+      );
     }
   }
 
@@ -68,6 +115,19 @@ class SseManager {
    * Silently removes the client if the write fails (connection already closed).
    */
   public sendToClient(videoId: string, eventType: string, data: unknown): void {
+    this._lastVideoEvent.set(videoId, {
+      eventType,
+      data,
+      updatedAt: Date.now(),
+    });
+
+    if (TERMINAL_EVENTS.has(eventType)) {
+      // Keep terminal status briefly for reconnects, then clean up state.
+      setTimeout(() => {
+        this._lastVideoEvent.delete(videoId);
+      }, LAST_EVENT_TTL_MS);
+    }
+
     const client = this._clients.get(videoId);
     if (!client) return;
 

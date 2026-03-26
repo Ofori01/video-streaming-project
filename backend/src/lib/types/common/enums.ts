@@ -16,6 +16,13 @@ export enum UPLOAD_STATUS {
   FAILED = "failed",
 }
 
+export enum UPLOAD_SESSION_STATUS {
+  INITIATED = "initiated",
+  FINALIZED = "finalized",
+  EXPIRED = "expired",
+  FAILED = "failed",
+}
+
 export enum FILE_TYPE {
   THUMBNAIL  = "thumbnail",
   VIDEO = "video",

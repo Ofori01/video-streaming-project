@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from "react";
 import { Formik, Form, type FormikHelpers } from "formik";
-import * as Yup from "yup";
 import {
   Upload,
   X,
@@ -29,114 +28,149 @@ import {
 import { Field, FieldGroup } from "@/components/ui/field";
 import { useCreateVideo } from "@/hooks/mutations/useVideoMutations";
 import { useGetAllVideoCategories } from "@/hooks/queries/useVideoQuerries";
+import videoService from "@/backend/video.service";
 import { toast } from "sonner";
 import type { ApiErrorResponse } from "@/types/errors";
 import { Progress } from "@/components/ui/progress";
-import useUploadSSE from "@/hooks/use-upload-sse";
-
-interface MovieFormValues {
-  title: string;
-  description: string;
-  category: string;
-  video: File | null;
-  thumbnail: File | null;
-}
-
-const validationSchema = Yup.object({
-  title: Yup.string()
-    .required("Title is required")
-    .min(3, "Title must be at least 3 characters")
-    .max(100, "Title must not exceed 100 characters"),
-  description: Yup.string()
-    .required("Description is required")
-    .min(10, "Description must be at least 10 characters")
-    .max(1000, "Description must not exceed 1000 characters"),
-  category: Yup.string().required("Category is required"),
-  video: Yup.mixed()
-    .required("Video file is required")
-    .test("fileSize", "Video file is too large (max 500MB)", (value) => {
-      return value && (value as File).size <= 500 * 1024 * 1024;
-    })
-    .test("fileType", "Only video files are allowed", (value) => {
-      return (
-        value &&
-        ["video/mp4", "video/webm", "video/ogg", "video/quicktime"].includes(
-          (value as File).type,
-        )
-      );
-    }),
-  thumbnail: Yup.mixed()
-    .required("Thumbnail is required")
-    .test("fileSize", "Thumbnail is too large (max 5MB)", (value) => {
-      return value && (value as File).size <= 5 * 1024 * 1024;
-    })
-    .test("fileType", "Only image files are allowed", (value) => {
-      return (
-        value &&
-        ["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(
-          (value as File).type,
-        )
-      );
-    }),
-});
+import { uploadWithRetry } from "@/lib/upload/uploadWithRetry";
+import { useDispatch } from "react-redux";
+import { startProcessingTracking } from "@/store/uploadProcessing/uploadProcessingSlice";
+import {
+  initialMovieFormValues,
+  movieCreateValidationSchema,
+  type MovieFormValues,
+} from "./movie-create/form";
 
 const MovieCreate: React.FC = () => {
+  const dispatch = useDispatch();
   const createVideoMutation = useCreateVideo();
   const { data: categories = [], isLoading: isCategoriesLoading } =
     useGetAllVideoCategories();
+
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
-  // SSE upload progress
-  const [uploadedVideoId, setUploadedVideoId] = useState<number | null>(null);
+  const [uploadSessionId, setUploadSessionId] = useState<number | null>(null);
+  const [uploadSessionExpiresAt, setUploadSessionExpiresAt] = useState<
+    string | null
+  >(null);
+  const [videoUploadPercent, setVideoUploadPercent] = useState(0);
+  const [thumbnailUploadPercent, setThumbnailUploadPercent] = useState(0);
+  const [isUploadingToS3, setIsUploadingToS3] = useState(false);
+  const [isVideoUploaded, setIsVideoUploaded] = useState(false);
+  const [isThumbnailUploaded, setIsThumbnailUploaded] = useState(false);
 
-  const handleUploadComplete = useCallback(() => {
-    setTimeout(() => setUploadedVideoId(null), 3000);
+  const resetUploadState = useCallback(() => {
+    setUploadSessionId(null);
+    setUploadSessionExpiresAt(null);
+    setVideoUploadPercent(0);
+    setThumbnailUploadPercent(0);
+    setIsUploadingToS3(false);
+    setIsVideoUploaded(false);
+    setIsThumbnailUploaded(false);
   }, []);
 
-  const { percent, status: sseStatus } = useUploadSSE(
-    uploadedVideoId,
-    handleUploadComplete,
-  );
+  const beginDirectUpload = useCallback(
+    async (videoFile: File, thumbnailFile: File) => {
+      resetUploadState();
+      setIsUploadingToS3(true);
 
-  const initialValues: MovieFormValues = {
-    title: "",
-    description: "",
-    category: "",
-    video: null,
-    thumbnail: null,
-  };
+      try {
+        const uploadSession = await videoService.createUploadSession({
+          video: {
+            fileName: videoFile.name,
+            contentType: videoFile.type,
+            size: videoFile.size,
+          },
+          thumbnail: {
+            fileName: thumbnailFile.name,
+            contentType: thumbnailFile.type,
+            size: thumbnailFile.size,
+          },
+        });
+
+        setUploadSessionId(uploadSession.uploadSessionId);
+        setUploadSessionExpiresAt(uploadSession.expiresAt);
+
+        await Promise.all([
+          uploadWithRetry({
+            presignedPostData: uploadSession.video,
+            file: videoFile,
+            onProgress: (progress) => setVideoUploadPercent(progress),
+            label: "video",
+            uploadFn: videoService.uploadFileToS3,
+          }).then(() => setIsVideoUploaded(true)),
+          uploadWithRetry({
+            presignedPostData: uploadSession.thumbnail,
+            file: thumbnailFile,
+            onProgress: (progress) => setThumbnailUploadPercent(progress),
+            label: "thumbnail",
+            uploadFn: videoService.uploadFileToS3,
+          }).then(() => setIsThumbnailUploaded(true)),
+        ]);
+
+        toast.success("Files uploaded", {
+          description:
+            "Video and thumbnail uploaded to cloud storage successfully.",
+        });
+      } catch (error) {
+        const uploadError = error as Error;
+        resetUploadState();
+        toast.error("Upload failed", {
+          description:
+            uploadError.message ||
+            "Service may be temporarily unavailable. Please wait and try again.",
+        });
+      } finally {
+        setIsUploadingToS3(false);
+      }
+    },
+    [resetUploadState],
+  );
 
   const handleVideoChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     setFieldValue: (field: string, value: unknown) => void,
+    thumbnail: File | null,
   ) => {
     const file = event.currentTarget.files?.[0];
     if (file) {
+      resetUploadState();
       setFieldValue("video", file);
       const url = URL.createObjectURL(file);
       setVideoPreview(url);
+
+      if (thumbnail) {
+        void beginDirectUpload(file, thumbnail);
+      }
     }
   };
 
   const handleThumbnailChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     setFieldValue: (field: string, value: unknown) => void,
+    video: File | null,
   ) => {
     const file = event.currentTarget.files?.[0];
     if (file) {
+      resetUploadState();
       setFieldValue("thumbnail", file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setThumbnailPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      if (video) {
+        void beginDirectUpload(video, file);
+      }
     }
   };
 
   const clearVideo = (
     setFieldValue: (field: string, value: unknown) => void,
   ) => {
+    resetUploadState();
     setFieldValue("video", null);
     if (videoPreview) {
       URL.revokeObjectURL(videoPreview);
@@ -147,6 +181,7 @@ const MovieCreate: React.FC = () => {
   const clearThumbnail = (
     setFieldValue: (field: string, value: unknown) => void,
   ) => {
+    resetUploadState();
     setFieldValue("thumbnail", null);
     setThumbnailPreview(null);
   };
@@ -156,48 +191,53 @@ const MovieCreate: React.FC = () => {
     { setSubmitting, resetForm }: FormikHelpers<MovieFormValues>,
   ) => {
     try {
-      const formData = new FormData();
-      formData.append("title", values.title);
-      formData.append("description", values.description);
-      formData.append("categoryId", values.category);
-      if (values.video) formData.append("video", values.video);
-      if (values.thumbnail) formData.append("thumbnail", values.thumbnail);
+      if (!uploadSessionId || !isVideoUploaded || !isThumbnailUploaded) {
+        toast.error("Upload incomplete", {
+          description:
+            "Please upload both video and thumbnail successfully before submitting.",
+        });
+        return;
+      }
 
-      const createdVideo = await createVideoMutation.mutateAsync(formData);
+      const createdVideo = await createVideoMutation.mutateAsync({
+        title: values.title,
+        description: values.description,
+        categoryId: Number(values.category),
+        uploadSessionId,
+      });
 
-      // Video record created — start listening to S3 upload progress via SSE
-      setUploadedVideoId(createdVideo.id);
+      dispatch(
+        startProcessingTracking({
+          videoId: createdVideo.id,
+          title: values.title,
+        }),
+      );
 
       toast.success("Movie uploaded successfully!", {
-        description: `"${values.title}" is being processed. Watch the progress bar below.`,
+        description: `"${values.title}" is being processed. Track it from the floating status widget.`,
         icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
       });
 
-      // Reset form after successful upload
       setTimeout(() => {
         resetForm();
         setVideoPreview(null);
         setThumbnailPreview(null);
+        resetUploadState();
       }, 1000);
     } catch (error) {
       console.error("Upload failed:", error);
 
-      // Type guard to check if error is ApiErrorResponse
       const apiError = error as ApiErrorResponse;
-
-      // Extract error message
       const errorMessage =
         apiError?.message ||
         "There was an error uploading your movie. Please try again.";
 
-      // Extract field-specific errors if available
       const fieldErrors = apiError?.errors
         ? apiError.errors
             .map((err) => `${err.field}: ${err.message}`)
             .join(", ")
         : null;
 
-      // Show error message
       toast.error("Upload failed", {
         description: fieldErrors || errorMessage,
       });
@@ -218,8 +258,8 @@ const MovieCreate: React.FC = () => {
       </div>
 
       <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
+        initialValues={initialMovieFormValues}
+        validationSchema={movieCreateValidationSchema}
         onSubmit={handleSubmit}
       >
         {({ values, errors, touched, setFieldValue, isSubmitting }) => (
@@ -234,7 +274,6 @@ const MovieCreate: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <FieldGroup>
-                    {/* Title Field */}
                     <Field>
                       <Label htmlFor="title">Title *</Label>
                       <Input
@@ -252,7 +291,6 @@ const MovieCreate: React.FC = () => {
                       )}
                     </Field>
 
-                    {/* Category Field */}
                     <Field>
                       <Label htmlFor="category">Category *</Label>
                       <Select
@@ -296,7 +334,6 @@ const MovieCreate: React.FC = () => {
                       )}
                     </Field>
 
-                    {/* Description Field */}
                     <Field>
                       <Label htmlFor="description">Description *</Label>
                       <Textarea
@@ -322,7 +359,6 @@ const MovieCreate: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Video Upload Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Video File</CardTitle>
@@ -351,7 +387,13 @@ const MovieCreate: React.FC = () => {
                           type="file"
                           className="hidden"
                           accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                          onChange={(e) => handleVideoChange(e, setFieldValue)}
+                          onChange={(e) =>
+                            handleVideoChange(
+                              e,
+                              setFieldValue,
+                              values.thumbnail,
+                            )
+                          }
                         />
                       </label>
                     ) : (
@@ -389,7 +431,6 @@ const MovieCreate: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Thumbnail Upload Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Thumbnail Image</CardTitle>
@@ -419,7 +460,11 @@ const MovieCreate: React.FC = () => {
                           className="hidden"
                           accept="image/jpeg,image/png,image/webp,image/jpg"
                           onChange={(e) =>
-                            handleThumbnailChange(e, setFieldValue)
+                            handleThumbnailChange(
+                              e,
+                              setFieldValue,
+                              values.video,
+                            )
                           }
                         />
                       </label>
@@ -460,56 +505,48 @@ const MovieCreate: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Upload Progress Bar */}
-              {uploadedVideoId !== null && (
+              {(isUploadingToS3 || uploadSessionId !== null) && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
-                      {sseStatus === "complete"
-                        ? "Upload Complete"
-                        : sseStatus === "error"
-                          ? "Upload Failed"
-                          : "Uploading to Cloud Storage"}
-                    </CardTitle>
+                    <CardTitle className="text-base">Upload Progress</CardTitle>
                     <CardDescription>
-                      {sseStatus === "complete"
-                        ? "Your video has been successfully uploaded to the cloud."
-                        : sseStatus === "error"
-                          ? "Something went wrong during the upload."
-                          : "Transferring your video file to AWS S3. This may take a moment for large files."}
+                      Uploading files cloud storage
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          {sseStatus === "connecting"
-                            ? "Connecting..."
-                            : `${percent}% uploaded`}
+                          Video Upload
                         </span>
-                        {sseStatus === "complete" && (
-                          <span className="text-green-500 font-medium flex items-center gap-1">
-                            <CheckCircle2 className="w-4 h-4" />
-                            Done
-                          </span>
-                        )}
+                        <span>{videoUploadPercent}%</span>
+                      </div>
+                      <Progress value={videoUploadPercent} className="h-2" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Thumbnail Upload
+                        </span>
+                        <span>{thumbnailUploadPercent}%</span>
                       </div>
                       <Progress
-                        value={percent}
-                        className={`h-2 transition-all duration-300 ${
-                          sseStatus === "complete"
-                            ? "[&>div]:bg-green-500"
-                            : sseStatus === "error"
-                              ? "[&>div]:bg-destructive"
-                              : ""
-                        }`}
+                        value={thumbnailUploadPercent}
+                        className="h-2"
                       />
                     </div>
+
+                    {uploadSessionExpiresAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Upload session expires at{" "}
+                        {new Date(uploadSessionExpiresAt).toLocaleTimeString()}.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               )}
 
-              {/* Submit Button */}
               <div className="flex justify-end gap-4">
                 <Button
                   type="button"
@@ -520,27 +557,33 @@ const MovieCreate: React.FC = () => {
                     setFieldValue("category", "");
                     clearVideo(setFieldValue);
                     clearThumbnail(setFieldValue);
-                    setUploadedVideoId(null);
+                    resetUploadState();
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingToS3}
                 >
                   Clear
                 </Button>
                 <Button
                   type="submit"
                   variant="destructive"
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    isUploadingToS3 ||
+                    !uploadSessionId ||
+                    !isVideoUploaded ||
+                    !isThumbnailUploaded
+                  }
                   className="min-w-32"
                 >
                   {isSubmitting ? (
                     <>
                       <Upload className="w-4 h-4 mr-2 animate-pulse" />
-                      Uploading...
+                      Publishing...
                     </>
                   ) : (
                     <>
                       <Upload className="w-4 h-4 mr-2" />
-                      Upload Movie
+                      Publish Movie
                     </>
                   )}
                 </Button>

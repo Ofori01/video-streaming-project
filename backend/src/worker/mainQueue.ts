@@ -8,6 +8,16 @@ export const mainQueueName = "main queue";
 
 const mainQueue = new Queue<{ videoId: number }>(mainQueueName, {
   connection,
+  defaultJobOptions: {
+    removeOnComplete: {
+      age: 60 * 60,
+      count: 200,
+    },
+    removeOnFail: {
+      age: 24 * 60 * 60,
+      count: 500,
+    },
+  },
 });
 
 //listen for completed event

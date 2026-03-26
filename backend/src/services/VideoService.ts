@@ -2,27 +2,48 @@ import path from "path";
 import { AppDataSource } from "../config/db.config";
 import { CategoryEntity } from "../entities/CategoryEntity";
 import { FileEntity } from "../entities/FilesEntity";
+import { UploadSessionEntity } from "../entities/UploadSessionEntity";
 import { UserEntity } from "../entities/UserEntity";
 import { VideoEntity } from "../entities/VideoEntity";
-import { UploadFiles, videoUploadJobPayload } from "../interfaces/common/Files";
-import { CreateVideoDto } from "../interfaces/dtos/video-dtos";
+import {
+  CreateUploadSessionDto,
+  CreateUploadSessionResponse,
+  CreateVideoDto,
+} from "../interfaces/dtos/video-dtos";
 import { IVideoRepository } from "../interfaces/repositories/IVideoRepository";
 import { IVideoService } from "../interfaces/services/IVideoService";
-import { FILE_TYPE, UPLOAD_STATUS } from "../lib/types/common/enums";
+import {
+  FILE_TYPE,
+  UPLOAD_SESSION_STATUS,
+  UPLOAD_STATUS,
+  VIDEO_STATUS,
+} from "../lib/types/common/enums";
 import { NotFoundError } from "../middlewares/errorHandler/errors/NotFoundError";
 import { GenericService } from "./GenericService";
 import S3StorageService from "./StorageService";
 import CustomError from "../middlewares/errorHandler/errors/CustomError";
 import { v4 as uuidV4 } from "uuid";
-import videoUploadQueue, {
-  videoUploadQueueName,
-} from "../worker/videoUploadQueue";
-import thumbnailUploadQueue, {
-  thumbnailUploadQueueName,
-} from "../worker/thumbnailUploadQueue";
+import { videoUploadQueueName } from "../worker/videoUploadQueue";
 import uploadFlow, { uploadFlowName } from "../jobs/mainFlow";
-import { th } from "zod/v4/locales";
 import { mainQueueName } from "../worker/mainQueue";
+
+const VIDEO_ALLOWED_MIME_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+];
+
+const THUMBNAIL_ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
+const MAX_VIDEO_SIZE_BYTES = 500 * 1024 * 1024;
+const MAX_THUMBNAIL_SIZE_BYTES = 5 * 1024 * 1024;
+const UPLOAD_SESSION_EXPIRY_SECONDS = 15 * 60;
 
 export class VideoService
   extends GenericService<VideoEntity>
@@ -30,50 +51,172 @@ export class VideoService
 {
   constructor(
     protected videoRepository: IVideoRepository,
-    protected S3Service: S3StorageService, // private _categoryRepository: ICategoryRepository
+    protected S3Service: S3StorageService,
   ) {
     super(videoRepository);
   }
 
-  async CreateVideo(
-    dto: CreateVideoDto,
-    files: UploadFiles,
-    user: number,
-  ): Promise<VideoEntity> {
-    //upload video to s3
-    const thumbnailFile = files.thumbnail?.[0];
-    const videoFile = files.video?.[0];
-
-    if (!thumbnailFile || !videoFile) {
-      throw new CustomError("video and thumbnail files are expected", 400);
+  private assertValidFileInput(params: {
+    contentType: string;
+    size: number;
+    allowedTypes: string[];
+    maxSize: number;
+    fieldName: "video" | "thumbnail";
+  }) {
+    if (!params.allowedTypes.includes(params.contentType)) {
+      throw new CustomError(`${params.fieldName} file type is not supported`, 400);
     }
 
-    // const baseKey = `${user}/${Date.now()}`; //uuid
-    const baseKey = uuidV4();
+    if (params.size <= 0 || params.size > params.maxSize) {
+      throw new CustomError(
+        `${params.fieldName} file size is invalid or exceeds allowed limit`,
+        400,
+      );
+    }
+  }
 
-    // const [S3thumbnail, S3video] = await Promise.all([
-    //   this.S3Service.upload({
-    //     body: thumbnailFile.buffer,
-    //     key: `thumbnail/${baseKey}${path
-    //       .extname(thumbnailFile.originalname)
-    //       .toLowerCase()}`,
-    //     contentType: thumbnailFile.mimetype,
-    //     metaData: {
-    //       createdAt: Date.now().toString(),
-    //     },
-    //   }),
+  private getFileExtension(fileName: string): string {
+    const extension = path.extname(fileName).toLowerCase();
+    return extension || "";
+  }
 
-    //   this.S3Service.upload({
-    //     body: videoFile.buffer,
-    //     key: `video/${baseKey}${path.extname(videoFile.originalname)}`,
-    //     contentType: videoFile.mimetype,
-    //     metaData: {
-    //       createdAt: Date.now().toString(),
-    //     },
-    //   }),
-    // ]);
+  async CreateUploadSession(
+    dto: CreateUploadSessionDto,
+    userId: number,
+  ): Promise<CreateUploadSessionResponse> {
+    this.assertValidFileInput({
+      contentType: dto.video.contentType,
+      size: dto.video.size,
+      allowedTypes: VIDEO_ALLOWED_MIME_TYPES,
+      maxSize: MAX_VIDEO_SIZE_BYTES,
+      fieldName: "video",
+    });
 
-    //save video to db
+    this.assertValidFileInput({
+      contentType: dto.thumbnail.contentType,
+      size: dto.thumbnail.size,
+      allowedTypes: THUMBNAIL_ALLOWED_MIME_TYPES,
+      maxSize: MAX_THUMBNAIL_SIZE_BYTES,
+      fieldName: "thumbnail",
+    });
+
+    const uploader = await AppDataSource.getRepository(UserEntity).findOne({
+      where: { id: userId },
+    });
+
+    if (!uploader) {
+      throw new NotFoundError("Uploaded By user not found");
+    }
+
+    const sessionKey = uuidV4();
+    const videoExtension = this.getFileExtension(dto.video.fileName);
+    const thumbnailExtension = this.getFileExtension(dto.thumbnail.fileName);
+    const expiresAt = new Date(Date.now() + UPLOAD_SESSION_EXPIRY_SECONDS * 1000);
+
+    const videoTempKey = `uploads/tmp/${userId}/${sessionKey}/video${videoExtension}`;
+    const thumbnailTempKey = `uploads/tmp/${userId}/${sessionKey}/thumbnail${thumbnailExtension}`;
+    const videoFinalKey = `video/${sessionKey}${videoExtension}`;
+    const thumbnailFinalKey = `thumbnail/${sessionKey}${thumbnailExtension}`;
+
+    const [videoPresignedPost, thumbnailPresignedPost] = await Promise.all([
+      this.S3Service.createPresignedPost({
+        key: videoTempKey,
+        contentType: dto.video.contentType,
+        maxSize: MAX_VIDEO_SIZE_BYTES,
+        expiresInSeconds: UPLOAD_SESSION_EXPIRY_SECONDS,
+      }),
+      this.S3Service.createPresignedPost({
+        key: thumbnailTempKey,
+        contentType: dto.thumbnail.contentType,
+        maxSize: MAX_THUMBNAIL_SIZE_BYTES,
+        expiresInSeconds: UPLOAD_SESSION_EXPIRY_SECONDS,
+      }),
+    ]);
+
+    const uploadSessionRepo = AppDataSource.getRepository(UploadSessionEntity);
+    const uploadSession = uploadSessionRepo.create({
+      user: uploader,
+      status: UPLOAD_SESSION_STATUS.INITIATED,
+      expiresAt,
+      videoTempKey,
+      thumbnailTempKey,
+      videoFinalKey,
+      thumbnailFinalKey,
+      videoExpectedMimeType: dto.video.contentType,
+      videoExpectedSize: dto.video.size.toString(),
+      thumbnailExpectedMimeType: dto.thumbnail.contentType,
+      thumbnailExpectedSize: dto.thumbnail.size.toString(),
+    });
+
+    const savedUploadSession = await uploadSessionRepo.save(uploadSession);
+
+    return {
+      uploadSessionId: savedUploadSession.id,
+      expiresAt: savedUploadSession.expiresAt.toISOString(),
+      video: videoPresignedPost,
+      thumbnail: thumbnailPresignedPost,
+    };
+  }
+
+  async CreateVideo(
+    dto: CreateVideoDto,
+    userId: number,
+  ): Promise<VideoEntity> {
+    const uploadSessionRepo = AppDataSource.getRepository(UploadSessionEntity);
+    const uploadSession = await uploadSessionRepo.findOne({
+      where: { id: dto.uploadSessionId },
+      relations: {
+        user: true,
+      },
+    });
+
+    if (!uploadSession) {
+      throw new NotFoundError("Upload session not found");
+    }
+
+    if (uploadSession.user.id !== userId) {
+      throw new CustomError("You are not authorized for this upload session", 403);
+    }
+
+    if (uploadSession.status !== UPLOAD_SESSION_STATUS.INITIATED) {
+      throw new CustomError("Upload session is no longer valid", 400);
+    }
+
+    if (uploadSession.expiresAt.getTime() < Date.now()) {
+      uploadSession.status = UPLOAD_SESSION_STATUS.EXPIRED;
+      await uploadSessionRepo.save(uploadSession);
+      throw new CustomError("Upload session expired, please re-upload files", 400);
+    }
+
+    const [videoMetadata, thumbnailMetadata] = await Promise.all([
+      this.S3Service.getObjectMetadata(uploadSession.videoTempKey),
+      this.S3Service.getObjectMetadata(uploadSession.thumbnailTempKey),
+    ]);
+
+    if (!videoMetadata || !thumbnailMetadata) {
+      throw new CustomError(
+        "Uploaded file was not found. Please try uploading again",
+        400,
+      );
+    }
+
+    const expectedVideoSize = Number(uploadSession.videoExpectedSize);
+    const expectedThumbnailSize = Number(uploadSession.thumbnailExpectedSize);
+
+    if (
+      videoMetadata.ContentLength !== expectedVideoSize ||
+      thumbnailMetadata.ContentLength !== expectedThumbnailSize
+    ) {
+      throw new CustomError("Uploaded file size does not match expected size", 400);
+    }
+
+    if (
+      videoMetadata.ContentType !== uploadSession.videoExpectedMimeType ||
+      thumbnailMetadata.ContentType !== uploadSession.thumbnailExpectedMimeType
+    ) {
+      throw new CustomError("Uploaded file type is invalid", 400);
+    }
+
     return AppDataSource.transaction(async (transactionManager) => {
       const Category = await transactionManager
         .getRepository(CategoryEntity)
@@ -83,24 +226,20 @@ export class VideoService
       }
       const uploader = await transactionManager
         .getRepository(UserEntity)
-        .findOne({ where: { id: dto.uploadedByUserId } });
+        .findOne({ where: { id: userId } });
 
       if (!uploader) {
         throw new NotFoundError("Uploaded By user not found");
       }
       const videoRepo = transactionManager.getRepository(VideoEntity);
-      // const fileRepo = transactionManager.getRepository(FileEntity);
+      const sessionRepo = transactionManager.getRepository(UploadSessionEntity);
+      const fileRepo = transactionManager.getRepository(FileEntity);
 
-      // const thumbnail = fileRepo.create({
-      //   type: FILE_TYPE.THUMBNAIL,
-      //   url: S3thumbnail.url,
-      // });
-      // const video = fileRepo.create({
-      //   type: FILE_TYPE.VIDEO,
-      //   url: S3video.url,
-      // });
-
-      // await fileRepo.save([thumbnail, video]);
+      const thumbnailFile = fileRepo.create({
+        type: FILE_TYPE.THUMBNAIL,
+        url: this.S3Service.GetPublicUrl(uploadSession.thumbnailTempKey),
+      });
+      const savedThumbnailFile = await fileRepo.save(thumbnailFile);
 
       const newVideo = videoRepo.create({
         title: dto.title,
@@ -108,8 +247,7 @@ export class VideoService
         category: Category,
         uploadedBy: uploader,
         processingStatus: UPLOAD_STATUS.PROCESSING,
-        // thumbnail: thumbnail,
-        // video: video,
+        thumbnail: savedThumbnailFile,
       });
       await videoRepo.save(newVideo);
 
@@ -118,51 +256,27 @@ export class VideoService
         queueName: mainQueueName,
         data: { videoId: newVideo.id },
         children: [
-          // thumbnail upload
-          {
-            name: thumbnailUploadQueueName,
-            queueName: thumbnailUploadQueueName,
-            data: {
-              createdAt: new Date().toDateString(),
-              key: `thumbnail/${baseKey}${path
-                .extname(thumbnailFile.originalname)
-                .toLowerCase()}`,
-              mimeType: thumbnailFile.mimetype,
-              thumbnailBuffer: thumbnailFile.buffer.toString("base64"),
-              videoId: newVideo.id,
-            },
-          },
           {
             name: videoUploadQueueName,
             queueName: videoUploadQueueName,
             data: {
-              createdAt: new Date().toDateString(),
-              mimeType: videoFile.mimetype,
-              videoBuffer: videoFile.buffer.toString("base64"),
-              key: `video/${baseKey}${path.extname(videoFile.originalname)}`,
+              createdAt: new Date().toISOString(),
+              mimeType: uploadSession.videoExpectedMimeType,
+              sourceKey: uploadSession.videoTempKey,
+              key: uploadSession.videoFinalKey,
               videoId: newVideo.id,
             },
           },
         ],
       });
 
-      // await thumbnailUploadQueue.add("thumbnail upload", {
-      //   createdAt: new Date().toDateString(),
-      //   key: `thumbnail/${baseKey}${path
-      //     .extname(thumbnailFile.originalname)
-      //     .toLowerCase()}`,
-      //   mimeType: thumbnailFile.mimetype,
-      //   thumbnailBuffer: thumbnailFile.buffer.toString("base64"),
-      //   videoId: newVideo.id,
-      // });
-
-      // await videoUploadQueue.add("video upload", {
-      //   createdAt: new Date().toDateString(),
-      //   mimeType: videoFile.mimetype,
-      //   videoBuffer: videoFile.buffer.toString("base64"),
-      //   key: `video/${baseKey}${path.extname(videoFile.originalname)}`,
-      //   videoId: newVideo.id,
-      // });
+      uploadSession.status = UPLOAD_SESSION_STATUS.FINALIZED;
+      uploadSession.finalizedAt = new Date();
+      uploadSession.videoUploadedAt = new Date(videoMetadata.LastModified ?? new Date());
+      uploadSession.thumbnailUploadedAt = new Date(
+        thumbnailMetadata.LastModified ?? new Date(),
+      );
+      await sessionRepo.save(uploadSession);
 
       return await videoRepo.findOneOrFail({
         where: {
@@ -183,5 +297,16 @@ export class VideoService
         },
       });
     });
+  }
+
+  async DeleteVideo(videoId: number): Promise<void> {
+    const video = await this.videoRepository.GetById(videoId);
+
+    if (video.status === VIDEO_STATUS.DELETED) {
+      return;
+    }
+
+    video.status = VIDEO_STATUS.DELETED;
+    await this.videoRepository.Update(videoId, video);
   }
 }

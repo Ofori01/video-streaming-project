@@ -1,25 +1,23 @@
-import { Worker, Job, tryCatch } from "bullmq";
+import { Worker, Job } from "bullmq";
 import { thumbnailUploadJobPayload } from "../interfaces/common/Files";
 import { thumbnailUploadQueueName } from "../worker/thumbnailUploadQueue";
 import S3StorageService from "../services/StorageService";
 import { FileRepository } from "../repositories/FileRepository";
 import { FileEntity } from "../entities/FilesEntity";
-import { FILE_TYPE, UPLOAD_STATUS } from "../lib/types/common/enums";
+import { FILE_TYPE } from "../lib/types/common/enums";
 import { VideoRepository } from "../repositories/VideoRepository";
 import connection from "../config/bullmq.config";
 
 const thumbnailUploadWorker = new Worker<thumbnailUploadJobPayload>(
   thumbnailUploadQueueName,
   async (job: Job<thumbnailUploadJobPayload>) => {
-    const { thumbnailBuffer, key, createdAt, mimeType, videoId } = job.data;
-    const name = job.name
+    const { sourceKey, key, createdAt, mimeType, videoId } = job.data;
 
     try {
-
       const storageService = new S3StorageService();
       console.log("Uploading thumbnail in job");
       const thumbnail = await storageService.upload({
-        body: Buffer.from(thumbnailBuffer, "base64"),
+        body: await storageService.getObjectBuffer(sourceKey),
         key: key,
         contentType: mimeType,
         metaData: {
@@ -41,15 +39,18 @@ const thumbnailUploadWorker = new Worker<thumbnailUploadJobPayload>(
 
       console.log("thumbnail Worker", savedVideo);
 
-      // if (savedVideo.thumbnail) {
-      //   savedVideo.processingStatus = UPLOAD_STATUS.COMPLETED;
-      // }
       await videoRepo.Update(videoId, savedVideo);
+      await storageService.deleteObject(sourceKey);
     } catch (error) {
       console.error(error);
     }
   },
-  { connection },
+  {
+    connection,
+    concurrency: 1,
+    lockDuration: 2 * 60 * 1000,
+    maxStalledCount: 2,
+  },
 );
 
 export default thumbnailUploadWorker;
