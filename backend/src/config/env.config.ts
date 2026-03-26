@@ -30,6 +30,16 @@ class Config {
     SUPABASE_ANON_KEY: z.string().optional(),
     REDIS_URL: z.string().optional(),
     FRONTEND_URL: z.string().default("*"),
+    ENABLE_BULL_BOARD: z.string().optional().default("false"),
+    ENABLE_VIDEO_UPLOAD_WORKER: z.string().optional().default("true"),
+    ENABLE_MAIN_FLOW_WORKER: z.string().optional().default("true"),
+    ENABLE_THUMBNAIL_UPLOAD_WORKER: z.string().optional().default("false"),
+    ENABLE_UPLOAD_SESSION_CLEANUP_WORKER: z.string()
+      .optional()
+      .default("false"),
+    ENABLE_DELETED_VIDEO_CLEANUP_WORKER: z.string()
+      .optional()
+      .default("false"),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;

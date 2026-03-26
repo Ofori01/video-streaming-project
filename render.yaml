@@ -32,6 +32,18 @@ services:
         value: session
       - key: REDIS_URL
         sync: false
+      - key: ENABLE_BULL_BOARD
+        value: "false"
+      - key: ENABLE_VIDEO_UPLOAD_WORKER
+        value: "true"
+      - key: ENABLE_MAIN_FLOW_WORKER
+        value: "true"
+      - key: ENABLE_THUMBNAIL_UPLOAD_WORKER
+        value: "false"
+      - key: ENABLE_UPLOAD_SESSION_CLEANUP_WORKER
+        value: "false"
+      - key: ENABLE_DELETED_VIDEO_CLEANUP_WORKER
+        value: "false"
       - key: AWS_REGION
         sync: false
       - key: AWS_ACCESS_KEY
