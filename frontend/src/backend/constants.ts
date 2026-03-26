@@ -8,8 +8,11 @@ export const endpoints = {
 
   // videos
   getAllVideos: "/video",
+  getAllVideosAdmin: "/video/admin",
   getVideo: (videoId: number) => `/video/${videoId}`,
+  deleteVideo: (videoId: number) => `/video/${videoId}`,
   createVideo: "/video",
+  createUploadSession: "/video/upload-session",
   getAllCategories: "/category",
 
   // dashboard
