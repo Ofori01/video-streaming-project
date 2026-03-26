@@ -37,17 +37,25 @@ app.use((req, res: Response) => {
 });
 
 const setupBullBoard = async () => {
-  const [{ BullMQAdapter }, { ExpressAdapter }, { createBullBoard }, { default: thumbnailUploadQueue }, { default: videoUploadQueue }, { default: mainQueue }, { cleanupQueue }, { deletedVideoCleanupQueue }] =
-    await Promise.all([
-      import("@bull-board/api/bullMQAdapter"),
-      import("@bull-board/express"),
-      import("@bull-board/api"),
-      import("./worker/thumbnailUploadQueue"),
-      import("./worker/videoUploadQueue"),
-      import("./worker/mainQueue"),
-      import("./jobs/uploadSessionCleanup"),
-      import("./jobs/deletedVideoCleanup"),
-    ]);
+  const [
+    { BullMQAdapter },
+    { ExpressAdapter },
+    { createBullBoard },
+    { default: thumbnailUploadQueue },
+    { default: videoUploadQueue },
+    { default: mainQueue },
+    { cleanupQueue },
+    { deletedVideoCleanupQueue },
+  ] = await Promise.all([
+    import("@bull-board/api/bullMQAdapter"),
+    import("@bull-board/express"),
+    import("@bull-board/api"),
+    import("./worker/thumbnailUploadQueue"),
+    import("./worker/videoUploadQueue"),
+    import("./worker/mainQueue"),
+    import("./jobs/uploadSessionCleanup"),
+    import("./jobs/deletedVideoCleanup"),
+  ]);
 
   const serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath("/ui");
@@ -65,8 +73,36 @@ const setupBullBoard = async () => {
   app.use("/ui", serverAdapter.getRouter());
 };
 
+const setupWorkers = async () => {
+  const workerImports: Array<Promise<unknown>> = [];
+
+  if (envConfig.ENABLE_VIDEO_UPLOAD_WORKER === "true") {
+    workerImports.push(import("./jobs/videoUpload"));
+  }
+
+  if (envConfig.ENABLE_MAIN_FLOW_WORKER === "true") {
+    workerImports.push(import("./jobs/mainFlow"));
+  }
+
+  if (envConfig.ENABLE_THUMBNAIL_UPLOAD_WORKER === "true") {
+    workerImports.push(import("./jobs/thumbnailUpload"));
+  }
+
+  if (envConfig.ENABLE_UPLOAD_SESSION_CLEANUP_WORKER === "true") {
+    workerImports.push(import("./jobs/uploadSessionCleanup"));
+  }
+
+  if (envConfig.ENABLE_DELETED_VIDEO_CLEANUP_WORKER === "true") {
+    workerImports.push(import("./jobs/deletedVideoCleanup"));
+  }
+
+  await Promise.all(workerImports);
+};
+
 //initialize db before server connection
 initializeDb().then(() => {
+  void setupWorkers();
+
   if (envConfig.ENABLE_BULL_BOARD === "true") {
     void setupBullBoard();
   }
