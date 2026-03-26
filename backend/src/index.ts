@@ -17,6 +17,8 @@ import { createBullBoard } from "@bull-board/api";
 import "./jobs/videoUpload";
 import "./jobs/thumbnailUpload";
 import "./jobs/mainFlow";
+import { cleanupQueue } from "./jobs/uploadSessionCleanup";
+import { deletedVideoCleanupQueue } from "./jobs/deletedVideoCleanup";
 
 const app = express();
 
@@ -45,6 +47,8 @@ createBullBoard({
     new BullMQAdapter(thumbnailUploadQueue),
     new BullMQAdapter(videoUploadQueue),
     new BullMQAdapter(mainQueue),
+    new BullMQAdapter(cleanupQueue),
+    new BullMQAdapter(deletedVideoCleanupQueue),
   ],
   serverAdapter,
 });

@@ -23,23 +23,8 @@ const CreateVideoBodySchema = object({
     .required("Video Description is required")
     .max(1000, "Description must not exceed 1000 characters"),
   categoryId: number().required("categoryId is required"),
+  uploadSessionId: number().required("uploadSessionId is required"),
   uploadedByUserId: number().optional(),
-});
-export const CreateVideoFilesSchema = object({
-  thumbnail: mixed()
-    .required("thumbnail is required")
-    .test(
-      "thumb-count",
-      "thumbnail must contain exactly 1 file",
-      (v) => Array.isArray(v) && v.length === 1,
-    ),
-  video: mixed()
-    .required("video is required")
-    .test(
-      "video-count",
-      "video must contain exactly 1 file",
-      (v) => Array.isArray(v) && v.length === 1,
-    ),
 });
 
 export interface CreateVideoDto extends InferType<
@@ -48,8 +33,41 @@ export interface CreateVideoDto extends InferType<
 
 export const CreateVideoSchema = object({
   body: CreateVideoBodySchema,
-  files: CreateVideoFilesSchema,
 });
+
+const UploadFileMetadataSchema = object({
+  fileName: string().required("fileName is required").max(255),
+  contentType: string().required("contentType is required").max(100),
+  size: number().required("size is required").positive(),
+});
+
+const CreateUploadSessionBodySchema = object({
+  video: UploadFileMetadataSchema.required(),
+  thumbnail: UploadFileMetadataSchema.required(),
+});
+
+export interface CreateUploadSessionDto extends InferType<
+  typeof CreateUploadSessionBodySchema
+> {}
+
+export const CreateUploadSessionSchema = object({
+  body: CreateUploadSessionBodySchema,
+});
+
+export type CreateUploadSessionResponse = {
+  uploadSessionId: number;
+  expiresAt: string;
+  video: {
+    url: string;
+    fields: Record<string, string>;
+    key: string;
+  };
+  thumbnail: {
+    url: string;
+    fields: Record<string, string>;
+    key: string;
+  };
+};
 
 const GetVideoQueryParams = object({
   id: number().required("Video id is required"),
@@ -60,4 +78,8 @@ export interface GetVideoQueryDto extends InferType<
 
 export const GetVideoSchema = object({
   params: GetVideoQueryParams,
+});
+
+export const FinalizeUploadSessionSchema = object({
+  body: CreateVideoBodySchema,
 });

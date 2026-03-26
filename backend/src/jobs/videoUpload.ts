@@ -13,19 +13,43 @@ import { applyFastStart } from "../lib/ffmpeg/fastStartProcessor";
 const videoUploadWorker = new Worker<videoUploadJobPayload>(
   videoUploadQueueName,
   async (job: Job<videoUploadJobPayload>) => {
-    const { mimeType, createdAt, videoBuffer, key, videoId } = job.data;
+    const { mimeType, createdAt, sourceKey, key, videoId } = job.data;
     const videoIdStr = String(videoId);
 
     try {
       const storageService = new S3StorageService();
       console.log("Uploading video in job");
 
+      SseManager.sendToClient(videoIdStr, "upload-stage", {
+        stage: "queued",
+        message: "Worker picked up your video",
+        percent: 5,
+      });
+
       // Apply faststart optimization (moov atom at front)
-      let videoBufferToUpload = Buffer.from(videoBuffer, "base64");
+      SseManager.sendToClient(videoIdStr, "upload-stage", {
+        stage: "downloading",
+        message: "Fetching source video",
+        percent: 15,
+      });
+      let videoBufferToUpload = await storageService.getObjectBuffer(sourceKey);
+
       if (mimeType === "video/mp4" || key.endsWith(".mp4")) {
-        const processed = await applyFastStart(videoBufferToUpload, key);
-        videoBufferToUpload = Buffer.from(processed);
+        SseManager.sendToClient(videoIdStr, "upload-stage", {
+          stage: "optimizing",
+          message: "Optimizing video for streaming",
+          percent: 35,
+        });
+        videoBufferToUpload = await applyFastStart(videoBufferToUpload, key);
       }
+
+      SseManager.sendToClient(videoIdStr, "upload-stage", {
+        stage: "uploading",
+        message: "Uploading optimized video",
+        percent: 70,
+      });
+
+
 
       const video = await storageService.upload({
         body: videoBufferToUpload,
@@ -35,7 +59,9 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
           createdAt: createdAt,
         },
         onProgress: (loaded, total) => {
-          const percent = Math.round((loaded / total) * 100);
+          const ratio = total > 0 ? loaded / total : 0;
+          // Reserve the first 70% for preprocessing stages and map transfer to 70..95.
+          const percent = Math.min(95, Math.round(70 + ratio * 25));
           SseManager.sendToClient(videoIdStr, "upload-progress", {
             percent,
             loaded,
@@ -43,6 +69,8 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
           });
         },
       });
+
+
 
       const fileRepo = new FileRepository();
       const videoRepo = new VideoRepository();
@@ -58,6 +86,14 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
       savedVideo.video = savedVideoFile;
       await videoRepo.Update(videoId, savedVideo);
 
+      SseManager.sendToClient(videoIdStr, "upload-stage", {
+        stage: "finalizing",
+        message: "Finalizing video metadata",
+        percent: 98,
+      });
+
+      await storageService.deleteObject(sourceKey);
+
       // Notify the client that the upload is fully complete
       SseManager.sendToClient(videoIdStr, "upload-complete", { percent: 100 });
     } catch (error) {
@@ -69,6 +105,9 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
   },
   {
     connection,
+    concurrency: 1,
+    lockDuration: 5 * 60 * 1000,
+    maxStalledCount: 2,
   },
 );
 

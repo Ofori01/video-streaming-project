@@ -5,7 +5,7 @@ export type UploadFiles = {
 
 
 export type videoUploadJobPayload =  {
-  videoBuffer: string
+  sourceKey: string
   key: string
   mimeType: string
   createdAt: string,
@@ -13,7 +13,7 @@ export type videoUploadJobPayload =  {
 }
 
 export type thumbnailUploadJobPayload = {
-  thumbnailBuffer: string
+  sourceKey: string
   key: string
   mimeType: string
   createdAt: string

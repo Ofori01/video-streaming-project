@@ -3,12 +3,16 @@ export const endpoints = {
   login: "/auth/login",
   verifyOtp: "/auth/verify-otp",
   signUp: "/auth/sign-up",
+  googleExchange: "/auth/google/exchange",
   availableRoles: "auth/roles",
 
   // videos
   getAllVideos: "/video",
+  getAllVideosAdmin: "/video/admin",
   getVideo: (videoId: number) => `/video/${videoId}`,
+  deleteVideo: (videoId: number) => `/video/${videoId}`,
   createVideo: "/video",
+  createUploadSession: "/video/upload-session",
   getAllCategories: "/category",
 
   // dashboard

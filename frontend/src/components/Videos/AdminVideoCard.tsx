@@ -1,9 +1,25 @@
 import { UPLOAD_STATUS } from "@/types/Videos";
-import { Dot, EllipsisVertical } from "lucide-react";
+import { Dot, EllipsisVertical, Trash2 } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "../ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AdminVideoCardProps {
   id: number;
@@ -19,6 +35,8 @@ interface AdminVideoCardProps {
     name: string;
   };
   isHorizontal: boolean;
+  onDelete?: (videoId: number) => void;
+  isDeleting?: boolean;
 }
 
 const statusBadge = (status: UPLOAD_STATUS) => {
@@ -57,7 +75,11 @@ const AdminVideoCard: React.FC<AdminVideoCardProps> = ({
   isHorizontal = true,
   createdAt,
   views = "20",
+  onDelete,
+  isDeleting = false,
 }) => {
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+
   return (
     <div className="flex flex-col relative rounded-lg p-2 gap-2 hover:bg-red-900/30 hover:backdrop-blur-lg hover:cursor-pointer group transition-all ease-in-out duration-600">
       {/* video status badge */}
@@ -108,10 +130,55 @@ const AdminVideoCard: React.FC<AdminVideoCardProps> = ({
             </span>
           </div>
         </div>
-        <EllipsisVertical
-          size={24}
-          className="hover:bg-secondary/30 hover:backdrop-blur-2xl rounded-full p-1"
-        />
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="rounded-full p-1 hover:bg-secondary/30 hover:backdrop-blur-2xl"
+                aria-label="Open actions"
+              >
+                <EllipsisVertical size={24} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={(event) => {
+                  event.preventDefault();
+                  setConfirmOpen(true);
+                }}
+                disabled={isDeleting || !onDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete video
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this video?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This marks the video as deleted and schedules cleanup from storage.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={() => {
+                  if (onDelete) {
+                    onDelete(id);
+                  }
+                }}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

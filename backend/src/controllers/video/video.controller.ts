@@ -1,4 +1,5 @@
 import {
+  CreateUploadSessionDto,
   CreateVideoDto,
   GetAllVideosQuery,
   GetVideoQueryDto,
@@ -9,12 +10,10 @@ import { NextFunction, Response } from "express";
 import responseHandler from "../../middlewares/responseHandler/responseHandler";
 import {
   UPLOAD_STATUS,
-  USER_ROLE,
   VIDEO_STATUS,
 } from "../../lib/types/common/enums";
 import { FindOptionsWhere } from "typeorm";
 import { VideoEntity } from "../../entities/VideoEntity";
-import { UploadFiles } from "../../interfaces/common/Files";
 import { AppDataSource } from "../../config/db.config";
 import { UserEntity } from "../../entities/UserEntity";
 import { CategoryEntity } from "../../entities/CategoryEntity";
@@ -22,19 +21,45 @@ import { CategoryEntity } from "../../entities/CategoryEntity";
 export class VideoController {
   constructor(private _videoService: IVideoService) {}
 
+  private buildCategoryFilter(categoryId?: string): FindOptionsWhere<VideoEntity> {
+    if (!categoryId) {
+      return {};
+    }
+
+    return {
+      category: {
+        id: Number(categoryId),
+      },
+    };
+  }
+
+  CreateUploadSession = async (
+    req: AuthRequest<{}, {}, CreateUploadSessionDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const uploadSession = await this._videoService.CreateUploadSession(
+        req.body,
+        req.user?.id!,
+      );
+      return responseHandler.created(
+        res,
+        uploadSession,
+        "Upload session created successfully",
+      );
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   CreateVideo = async (
     req: AuthRequest<{}, {}, CreateVideoDto>,
     res: Response,
     next: NextFunction,
   ) => {
     try {
-      req.body.uploadedByUserId = req.user?.id;
-
-      const video = await this._videoService.CreateVideo(
-        req.body,
-        req.files as UploadFiles,
-        req.user?.id!,
-      );
+      const video = await this._videoService.CreateVideo(req.body, req.user?.id!);
       return responseHandler.created(res, video, "Video created successfully");
     } catch (error) {
       return next(error);
@@ -67,29 +92,56 @@ export class VideoController {
     next: NextFunction,
   ) => {
     try {
-      const userFilter: FindOptionsWhere<VideoEntity> =
-        req.user?.role === USER_ROLE.USER
-          ? {
-              status: VIDEO_STATUS.ACTIVE,
-              processingStatus: UPLOAD_STATUS.COMPLETED,
-            }
-          : {};
-      if (req.query.adminVideos && req.user?.role == USER_ROLE.ADMIN) {
-        userFilter.uploadedBy = {
-          id: req.user?.id,
-        };
-      }
-      const categoryFilter: FindOptionsWhere<VideoEntity> = req.query.categoryId
-        ? {
-            category: {
-              id: Number(req.query.categoryId),
-            },
-          }
-        : {};
+      const categoryFilter = this.buildCategoryFilter(req.query.categoryId);
 
       const videos = await this._videoService.GetAll({
         where: {
-          ...userFilter,
+          status: VIDEO_STATUS.ACTIVE,
+          processingStatus: UPLOAD_STATUS.COMPLETED,
+          ...categoryFilter,
+        },
+        order: {
+          createdAt: "DESC",
+        },
+        relations: {
+          uploadedBy: true,
+          category: true,
+          thumbnail: true,
+          video: true,
+        },
+        select: {
+          uploadedBy: {
+            password: false,
+            username: true,
+            id: true,
+          },
+        },
+      });
+
+      return responseHandler.success(res, videos);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  GetAllVideosAdmin = async (
+    req: AuthRequest<{}, {}, {}, GetAllVideosQuery>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const adminFilter: FindOptionsWhere<VideoEntity> = {};
+      if (req.query.adminVideos && req.user?.id) {
+        adminFilter.uploadedBy = {
+          id: req.user.id,
+        };
+      }
+
+      const categoryFilter = this.buildCategoryFilter(req.query.categoryId);
+
+      const videos = await this._videoService.GetAll({
+        where: {
+          ...adminFilter,
           ...categoryFilter,
         },
         order: {
@@ -131,6 +183,19 @@ export class VideoController {
         },
       });
       return responseHandler.success(res, video);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  DeleteVideo = async (
+    req: AuthRequest<GetVideoQueryDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      await this._videoService.DeleteVideo(req.params.id);
+      return responseHandler.deleted(res, "Video marked for deletion");
     } catch (error) {
       return next(error);
     }
