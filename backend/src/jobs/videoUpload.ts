@@ -40,8 +40,7 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
           message: "Optimizing video for streaming",
           percent: 35,
         });
-        const processed = await applyFastStart(videoBufferToUpload, key);
-        videoBufferToUpload = Buffer.from(processed);
+        videoBufferToUpload = await applyFastStart(videoBufferToUpload, key);
       }
 
       SseManager.sendToClient(videoIdStr, "upload-stage", {
@@ -102,6 +101,9 @@ const videoUploadWorker = new Worker<videoUploadJobPayload>(
   },
   {
     connection,
+    concurrency: 1,
+    lockDuration: 5 * 60 * 1000,
+    maxStalledCount: 2,
   },
 );
 

@@ -13,6 +13,16 @@ const uploadSessionCleanupJobName = "daily-upload-session-cleanup";
 
 export const cleanupQueue = new Queue(uploadSessionCleanupQueueName, {
   connection,
+  defaultJobOptions: {
+    removeOnComplete: {
+      age: 7 * 24 * 60 * 60,
+      count: 20,
+    },
+    removeOnFail: {
+      age: 14 * 24 * 60 * 60,
+      count: 50,
+    },
+  },
 });
 
 const getS3KeyFromUrl = (url: string): string | null => {
@@ -113,6 +123,8 @@ const cleanupWorker = new Worker(
   },
   {
     connection,
+    lockDuration: 2 * 60 * 1000,
+    maxStalledCount: 2,
   },
 );
 

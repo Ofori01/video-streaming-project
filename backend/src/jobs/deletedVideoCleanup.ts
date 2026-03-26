@@ -14,6 +14,16 @@ export const deletedVideoCleanupQueue = new Queue(
   deletedVideoCleanupQueueName,
   {
     connection,
+    defaultJobOptions: {
+      removeOnComplete: {
+        age: 7 * 24 * 60 * 60,
+        count: 20,
+      },
+      removeOnFail: {
+        age: 14 * 24 * 60 * 60,
+        count: 50,
+      },
+    },
   },
 );
 
@@ -101,6 +111,8 @@ const deletedVideoCleanupWorker = new Worker(
   },
   {
     connection,
+    lockDuration: 2 * 60 * 1000,
+    maxStalledCount: 2,
   },
 );
 

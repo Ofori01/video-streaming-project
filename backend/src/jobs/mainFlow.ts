@@ -30,6 +30,9 @@ const mainWorker = new Worker<{ videoId: number }>(
   },
   {
     connection,
+    concurrency: 1,
+    lockDuration: 2 * 60 * 1000,
+    maxStalledCount: 2,
   },
 );
 

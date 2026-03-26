@@ -45,7 +45,12 @@ const thumbnailUploadWorker = new Worker<thumbnailUploadJobPayload>(
       console.error(error);
     }
   },
-  { connection },
+  {
+    connection,
+    concurrency: 1,
+    lockDuration: 2 * 60 * 1000,
+    maxStalledCount: 2,
+  },
 );
 
 export default thumbnailUploadWorker;
