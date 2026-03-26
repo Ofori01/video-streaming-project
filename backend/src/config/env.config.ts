@@ -30,6 +30,7 @@ class Config {
     SUPABASE_ANON_KEY: z.string().optional(),
     REDIS_URL: z.string().optional(),
     FRONTEND_URL: z.string().default("*"),
+    ENABLE_BULL_BOARD: z.string().optional().default("false"),
   });
 
   private _env: z.infer<typeof this._EnvSchema>;
